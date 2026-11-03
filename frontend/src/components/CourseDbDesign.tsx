@@ -105,7 +105,7 @@ export default function CourseDbDesign({ courseId }: { courseId: string }) {
   return (
     <>
       <title>Database Design – Programming EDU</title>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css" />
 
       <PeRouterBridge />
       <Sidebar activePage="courses" />

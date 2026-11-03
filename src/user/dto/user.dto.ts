@@ -26,11 +26,13 @@ export class UpdateProfileDto {
   @IsOptional()
   @Transform(emptyToUndefined)
   @IsString({ message: 'Họ tên không hợp lệ' })
+  @MaxLength(100, { message: 'Họ tên không được vượt quá 100 ký tự' })
   name?: string;
 
   @IsOptional()
   @Transform(emptyToUndefined)
   @IsEmail({}, { message: 'Email không hợp lệ' })
+  @MaxLength(254, { message: 'Email quá dài' })
   email?: string;
 
   @IsOptional()
@@ -41,6 +43,7 @@ export class UpdateProfileDto {
   // Nhận chuỗi 'YYYY-MM-DD' (cột DB là @db.Date), service tự parse sang Date.
   @IsOptional()
   @IsString({ message: 'Ngày sinh không hợp lệ' })
+  @MaxLength(10, { message: 'Ngày sinh không hợp lệ' })
   birthday?: string;
 }
 
@@ -98,57 +101,68 @@ export class SurveyDto {
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('nghề nghiệp'))
+  @MaxLength(500, INVALID('nghề nghiệp'))
   job?: string;
 
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('mục đích học'))
+  @MaxLength(500, INVALID('mục đích học'))
   purpose?: string;
 
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('kinh nghiệm'))
+  @MaxLength(500, INVALID('kinh nghiệm'))
   experience?: string;
 
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('ngôn ngữ đã biết'))
+  @MaxLength(500, INVALID('ngôn ngữ đã biết'))
   language?: string;
 
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('trình độ'))
+  @MaxLength(500, INVALID('trình độ'))
   level?: string;
 
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('kỹ năng muốn học'))
+  @MaxLength(500, INVALID('kỹ năng muốn học'))
   skill_detail?: string;
 
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('mục tiêu'))
+  @MaxLength(500, INVALID('mục tiêu'))
   goal?: string;
 
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('lĩnh vực quan tâm'))
+  @MaxLength(500, INVALID('lĩnh vực quan tâm'))
   domain?: string;
 
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('định hướng nghề nghiệp'))
+  @MaxLength(500, INVALID('định hướng nghề nghiệp'))
   career_target?: string;
 
   /** Số giờ học mỗi tuần. */
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('thời gian học mỗi tuần'))
+  @MaxLength(500, INVALID('thời gian học mỗi tuần'))
   time?: string;
 
   /** Mốc thời gian muốn đạt mục tiêu. */
   @IsOptional()
   @Transform(toCommaString)
   @IsString(INVALID('thời hạn đạt mục tiêu'))
+  @MaxLength(500, INVALID('thời hạn đạt mục tiêu'))
   timeline?: string;
 }

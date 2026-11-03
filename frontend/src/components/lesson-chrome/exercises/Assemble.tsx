@@ -50,19 +50,7 @@ export default function Assemble({
                   <button
                     type="button"
                     onClick={() => heldToken && onFillSlot(line.slotId!)}
-                    style={{
-                      display: 'inline-block',
-                      minWidth: 90,
-                      margin: '0 4px',
-                      padding: '1px 10px',
-                      borderRadius: 6,
-                      border: filled[line.slotId] ? '1px solid var(--st-slot-border)' : '1.5px dashed var(--st-slot-border)',
-                      background: filled[line.slotId] ? 'rgba(255,255,255,.08)' : 'transparent',
-                      color: 'var(--st-syn-plain)',
-                      font: 'inherit',
-                      fontWeight: 700,
-                      cursor: heldToken ? 'pointer' : 'default',
-                    }}
+                    className={`![display:inline-block] ![min-width:90px] ![margin:0_4px] ![padding:1px_10px] ![border-radius:6px] ![color:var(--st-syn-plain)] ![font:inherit] ![font-weight:700] ${filled[line.slotId] ? '![border:1px_solid_var(--st-slot-border)] ![background:rgba(255,255,255,.08)]' : '![border:1.5px_dashed_var(--st-slot-border)] ![background:transparent]'} ${heldToken ? '![cursor:pointer]' : '![cursor:default]'}`}
                   >
                     {filled[line.slotId] || (heldToken ? 'thả vào đây' : '···')}
                   </button>
@@ -73,12 +61,12 @@ export default function Assemble({
           ))}
         </div>
       </div>
-      <div style={{ background: 'var(--edu-card-bg)', borderRadius: 12, padding: 14, marginTop: 12 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--edu-t2)', marginBottom: 8 }}>
+      <div className="![background:var(--edu-card-bg)] ![border-radius:12px] ![padding:14px] ![margin-top:12px]">
+        <div className="![font-size:12px] ![font-weight:700] ![color:var(--edu-t2)] ![margin-bottom:8px]">
           KHO TỪ KHOÁ {heldToken ? `— đang cầm "${heldToken}"` : '(bấm để cầm lên)'}
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {bank.length === 0 && <span style={{ fontSize: 12, color: 'var(--edu-t3)' }}>Hết token.</span>}
+        <div className="![display:flex] ![gap:8px] ![flex-wrap:wrap]">
+          {bank.length === 0 && <span className="![font-size:12px] ![color:var(--edu-t3)]">Hết token.</span>}
           {bank.map((token) => (
             <button
               key={token}

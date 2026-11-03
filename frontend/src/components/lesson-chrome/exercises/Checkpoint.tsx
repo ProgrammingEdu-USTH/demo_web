@@ -26,100 +26,51 @@ export default function Checkpoint({
   onPause,
 }: CheckpointProps) {
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div className="![text-align:center]">
       <div
-        style={{
-          width: 96,
-          height: 96,
-          borderRadius: '50%',
-          background: 'var(--edu-accent-grad)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 20px',
-          fontSize: 40,
-          color: 'var(--edu-panel-bg-solid)',
-        }}
+        className="![width:96px] ![height:96px] ![border-radius:50%] ![background:var(--edu-accent-grad)] ![display:flex] ![align-items:center] ![justify-content:center] ![margin:0_auto_20px] ![font-size:40px] ![color:var(--edu-panel-bg-solid)]"
       >
         🏆
       </div>
       <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          background: 'var(--edu-accent-soft)',
-          color: 'var(--edu-accent-text)',
-          borderRadius: 999,
-          padding: '4px 12px',
-          fontSize: 11,
-          fontWeight: 700,
-          textTransform: 'uppercase',
-        }}
+        className="![display:inline-flex] ![align-items:center] ![gap:6px] ![background:var(--edu-accent-soft)] ![color:var(--edu-accent-text)] ![border-radius:999px] ![padding:4px_12px] ![font-size:11px] ![font-weight:700] ![text-transform:uppercase]"
       >
         ● Cột mốc bài học
       </span>
-      <h2 style={{ fontSize: 26, fontWeight: 800, margin: '14px 0 8px', color: 'var(--edu-t1)' }}>{title}</h2>
-      <p style={{ fontSize: 14, color: 'var(--edu-t3)', maxWidth: 460, margin: '0 auto 20px' }}>{description}</p>
+      <h2 className="![font-size:26px] ![font-weight:800] ![margin:14px_0_8px] ![color:var(--edu-t1)]">{title}</h2>
+      <p className="![font-size:14px] ![color:var(--edu-t3)] ![max-width:460px] ![margin:0_auto_20px]">{description}</p>
       <div
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 10,
-          background: 'var(--edu-panel-bg-solid)',
-          border: '1px solid var(--edu-sidebar-border)',
-          borderRadius: 999,
-          padding: '8px 16px',
-          fontSize: 13,
-          marginBottom: 24,
-        }}
+        className="![display:inline-flex] ![align-items:center] ![gap:10px] ![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:999px] ![padding:8px_16px] ![font-size:13px] ![margin-bottom:24px]"
       >
         🎯 {accuracyLabel}
-        <span style={{ background: 'var(--edu-card-bg)', borderRadius: 999, padding: '2px 10px', fontWeight: 700 }}>
+        <span className="![background:var(--edu-card-bg)] ![border-radius:999px] ![padding:2px_10px] ![font-weight:700]">
           {accuracyValue}
         </span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'left' }}>
+      <div className="![display:flex] ![flex-direction:column] ![gap:10px] ![text-align:left]">
         {items.map((item, i) => (
           <div
             key={i}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'var(--edu-panel-bg-solid)',
-              border: '1px solid var(--edu-sidebar-border)',
-              borderRadius: 12,
-              padding: '14px 18px',
-            }}
+            className="![display:flex] ![align-items:center] ![justify-content:space-between] ![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:12px] ![padding:14px_18px]"
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ color: 'var(--st-ok-text)', fontSize: 18 }}>✓</span>
+            <div className="![display:flex] ![align-items:center] ![gap:12px]">
+              <span className="![color:var(--st-ok-text)] ![font-size:18px]">✓</span>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--edu-t1)' }}>{item.title}</div>
-                <div style={{ fontSize: 12, color: 'var(--st-ok-text)' }}>{item.meta}</div>
+                <div className="![font-weight:700] ![font-size:14px] ![color:var(--edu-t1)]">{item.title}</div>
+                <div className="![font-size:12px] ![color:var(--st-ok-text)]">{item.meta}</div>
               </div>
             </div>
-            <span style={{ background: 'var(--edu-card-bg)', color: 'var(--edu-t2)', borderRadius: 999, padding: '4px 10px', fontSize: 11, fontFamily: 'JetBrains Mono, monospace' }}>
+            <span className="![background:var(--edu-card-bg)] ![color:var(--edu-t2)] ![border-radius:999px] ![padding:4px_10px] ![font-size:11px] ![font-family:JetBrains_Mono,_monospace]">
               {item.xp} XP
             </span>
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+      <div className="![display:flex] ![gap:10px] ![margin-top:20px]">
         <button
           type="button"
           onClick={onContinue}
-          style={{
-            flex: 1,
-            height: 48,
-            borderRadius: 999,
-            border: 0,
-            background: 'var(--edu-accent-grad)',
-            color: 'var(--edu-panel-bg-solid)',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
+          className="![flex:1] ![height:48px] ![border-radius:999px] ![border:0] ![background:var(--edu-accent-grad)] ![color:var(--edu-panel-bg-solid)] ![font-weight:700] ![cursor:pointer]"
         >
           ▶ Học tiếp
         </button>
@@ -127,16 +78,7 @@ export default function Checkpoint({
           <button
             type="button"
             onClick={onPause}
-            style={{
-              padding: '0 20px',
-              height: 48,
-              borderRadius: 999,
-              border: '1px solid var(--edu-sidebar-border)',
-              background: 'var(--edu-panel-bg-solid)',
-              color: 'var(--edu-t2)',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
+            className="![padding:0_20px] ![height:48px] ![border-radius:999px] ![border:1px_solid_var(--edu-sidebar-border)] ![background:var(--edu-panel-bg-solid)] ![color:var(--edu-t2)] ![font-weight:600] ![cursor:pointer]"
           >
             🔖 Nghỉ, lưu tiến độ
           </button>

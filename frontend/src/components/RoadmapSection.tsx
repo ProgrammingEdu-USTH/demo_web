@@ -6,9 +6,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const W = () => window as any;
 
-export default function RoadmapSection() {
+export default function RoadmapSection({ active = false }: { active?: boolean }) {
   return (
-    <div className="page" id="page-roadmap">
+    <div className={active ? 'page active' : 'page'} id="page-roadmap">
       <div className="rm-root">
         {/* Tab bar — "Tùy chỉnh" luôn đứng đầu, rồi tới các lộ trình đã ghim */}
         <div className="rm-tabbar" id="rm-tabbar"></div>
@@ -30,7 +30,7 @@ export default function RoadmapSection() {
           </div>
 
           {/* Header lộ trình: tên, mô tả, vòng tiến độ */}
-          <div className="rm-head" id="rm-head" style={{ display: 'none' }}></div>
+          <div className="rm-head" id="rm-head" hidden></div>
 
           {/* Danh sách chặng (render bởi roadmap.js) */}
           <div className="rm-flow-wrap" id="rm-flow-wrap"></div>

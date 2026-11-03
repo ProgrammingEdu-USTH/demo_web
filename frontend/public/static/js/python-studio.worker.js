@@ -2,14 +2,14 @@
 /* global importScripts, loadPyodide */
 self.onmessage = async ({ data }) => {
   try {
-    importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js');
+    importScripts('/static/vendor/pyodide/pyodide.js');
     let output = '';
     const write = (line) => {
       if (output.length < 12000)
         output += line.slice(0, 12000 - output.length) + '\n';
     };
     const py = await loadPyodide({
-      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/',
+      indexURL: '/static/vendor/pyodide/',
       stdout: write,
       stderr: write,
     });

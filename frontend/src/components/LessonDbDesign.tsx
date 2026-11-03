@@ -42,10 +42,10 @@ export default function LessonDbDesign({ courseId }: { courseId: string }) {
   // Thứ tự script y hệt template: CodeMirror(head) → confetti(head) → content
   // → [content_tc|content_nc theo khóa] → table_explorer → drag_game → decomp_game → engine
   const scripts = [
-    'https://cdn.jsdelivr.net/npm/codemirror@5.65.7/lib/codemirror.min.js',
-    'https://cdn.jsdelivr.net/npm/codemirror@5.65.7/mode/sql/sql.min.js',
-    'https://cdn.jsdelivr.net/npm/codemirror@5.65.7/addon/display/placeholder.min.js',
-    'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js',
+    '/static/vendor/codemirror/codemirror.js',
+    '/static/vendor/codemirror/mode/sql.js',
+    '/static/vendor/codemirror/addon/placeholder.js',
+    '/static/vendor/canvas-confetti/confetti.browser.js',
     '/static/js/lesson_content.js',
     ...(courseId === 'db_design_tc' ? ['/static/js/lesson_content_tc.js'] : []),
     ...(courseId === 'db_design_nc' ? ['/static/js/lesson_content_nc.js'] : []),
@@ -58,15 +58,11 @@ export default function LessonDbDesign({ courseId }: { courseId: string }) {
   return (
     <>
       <title>Database Design — Bài học</title>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       {/* PERF 2026-07-19: trang này tải 4 script + 2 css từ jsdelivr và css từ
           cdnjs — preconnect cắt DNS+TLS handshake khỏi đường găng nạp engine */}
-      <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-      <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.7/lib/codemirror.min.css" />
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      <link href="/static/vendor/fonts/fonts.css" rel="stylesheet" />
+      <link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css" />
+      <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css" />
 
       {/* Scroll progress bar (4.8) */}
       <div className="scroll-progress" id="scroll-progress"></div>
@@ -139,7 +135,7 @@ export default function LessonDbDesign({ courseId }: { courseId: string }) {
         </div>
       </header>
 
-      <main className="lesson-stage">
+      <div className="lesson-stage">
         {/* ═══════════ STEP 1: THEORY ═══════════ */}
         <section className="step-pane active" data-step="1">
           <article className="step-1-content">
@@ -206,7 +202,7 @@ export default function LessonDbDesign({ courseId }: { courseId: string }) {
               <div className="mission-text" id="mission-text"></div>
             </div>
 
-            <button className="next-btn primary" id="step1-inline-cta" onClick={() => W().goToStep(2)} style={{ display: 'none' }} aria-hidden="true">
+            <button className="next-btn primary" id="step1-inline-cta" onClick={() => W().goToStep(2)} hidden aria-hidden="true">
               Đã hiểu, tiếp tục
               <i className="fa-solid fa-arrow-right"></i>
             </button>
@@ -425,7 +421,7 @@ export default function LessonDbDesign({ courseId }: { courseId: string }) {
             </div>
           </div>
         </section>
-      </main>
+      </div>
 
       {/* ════════════ STICKY NAV FOOTER ════════════ */}
       <nav className="lesson-nav-footer" id="lesson-nav-footer">

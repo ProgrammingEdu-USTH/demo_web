@@ -8,8 +8,8 @@ const W = () => window as any;
 export default function Topbar() {
   return (
     <>
-      <span id="sidebar-name" style={{ display: 'none' }}>—</span>
-      <span id="sidebar-role" style={{ display: 'none' }}>Học viên</span>
+      <span id="sidebar-name" hidden>—</span>
+      <span id="sidebar-role" hidden>Học viên</span>
 
       <div className="topbar">
         <div className="topbar-left">
@@ -19,7 +19,6 @@ export default function Topbar() {
               W().navigate('dashboard');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            style={{ cursor: 'pointer' }}
             title="Về trang chủ"
           >
             <span className="brand-title brand-full"><span className="brand-c1">Programming</span> <span className="brand-c2">EDU</span></span>
@@ -41,7 +40,7 @@ export default function Topbar() {
             <span className="nav-icon">💬</span><span>Diễn đàn</span>
           </button>
 
-          <button className="nav-btn" id="nav-admin" style={{ display: 'none' }} onClick={() => { window.location.href = '/admin'; }} aria-label="Quản trị">
+          <button className="nav-btn" id="nav-admin" hidden onClick={() => { window.location.href = '/admin'; }} aria-label="Quản trị">
             <span className="nav-icon">🛠️</span><span>Quản trị</span>
           </button>
           <span className="nav-underline" id="nav-underline"></span>

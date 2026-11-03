@@ -24,7 +24,10 @@ export class CustomThrottlerGuard extends ThrottlerGuard {
    */
   protected getTracker(req: Record<string, any>): Promise<string> {
     const userId = (req.user as { sub?: number } | undefined)?.sub;
-    return Promise.resolve(userId ? `user:${userId}` : `ip:${String(req.ip)}`);
+    // clientIp: IP thật do proxy frontend chuyển sang, chỉ được gán sau khi
+    // ProxyAuthMiddleware đã xác thực PROXY_SECRET (xem proxy-auth.middleware.ts).
+    const ip = (req.clientIp as string | undefined) ?? req.ip;
+    return Promise.resolve(userId ? `user:${userId}` : `ip:${String(ip)}`);
   }
 
   /**

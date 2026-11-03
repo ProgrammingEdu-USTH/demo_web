@@ -1,15 +1,17 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
-const CONTENT_SECURITY_POLICY = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://cdnjs.cloudflare.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
-  "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-  "img-src 'self' data: blob:",
-  "connect-src 'self' https://generativelanguage.googleapis.com",
-  "frame-ancestors 'self'",
-].join('; ');
+/**
+ * Backend chỉ trả JSON và redirect (OAuth) — không bao giờ trả HTML hay script
+ * cho trình duyệt render, nên CSP chặt tuyệt đối: không nạp gì, không được nhúng.
+ * CSP của các TRANG nằm ở frontend/src/proxy.ts.
+ */
+const CONTENT_SECURITY_POLICY =
+  "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
+
+const PERMISSIONS_POLICY =
+  'camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), ' +
+  'bluetooth=(), magnetometer=(), gyroscope=(), accelerometer=(), browsing-topics=()';
 
 @Injectable()
 export class SecurityHeadersMiddleware implements NestMiddleware {
@@ -18,8 +20,14 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     res.setHeader('Content-Security-Policy', CONTENT_SECURITY_POLICY);
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', PERMISSIONS_POLICY);
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    // same-site (không phải same-origin): lúc dev frontend :3000 gọi thẳng :5000.
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+    // Không quảng cáo framework.
+    res.removeHeader('X-Powered-By');
 
     if (this.isProduction) {
       res.setHeader(

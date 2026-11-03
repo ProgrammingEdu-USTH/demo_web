@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Thư viện bên thứ ba tự host (scripts/vendor-assets.mjs), không phải code của dự án.
+    "public/static/vendor/**",
   ]),
 ]);
 

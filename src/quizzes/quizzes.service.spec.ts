@@ -80,6 +80,70 @@ describe('QuizzesService', () => {
     });
   });
 
+  describe('xáo thứ tự đáp án khi sinh đề', () => {
+    const POOL = Array.from({ length: 10 }, (_, i) => ({
+      question: `Q${i}`,
+      options: ['đúng', 'sai1', 'sai2', 'sai3'],
+      correct: 0,
+    }));
+
+    async function sinhDe() {
+      prisma.lessonProgress.findMany.mockResolvedValue([{ lessonId: 1 }]);
+      prisma.lesson.findMany.mockResolvedValue([
+        { contentJson: { step_2: { mcq: POOL } } },
+      ]);
+      prisma.quiz.create.mockResolvedValue({ id: 9 });
+      const res: any = await service.generateQuiz(1, 'c1');
+      const saved: any[] = prisma.quiz.create.mock.calls[0][0].data.questionsJson;
+      return { res, saved };
+    }
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('sau xáo, options[correct] vẫn là đáp án đúng; response không lộ correct', async () => {
+      const { res, saved } = await sinhDe();
+      expect(saved).toHaveLength(10);
+      for (const q of saved) {
+        expect([...q.options].sort()).toEqual(['sai1', 'sai2', 'sai3', 'đúng']);
+        expect(q.options[q.correct]).toBe('đúng');
+      }
+      expect(JSON.stringify(res)).not.toContain('correct');
+    });
+
+    it('vị trí đáp án đúng không cố định (Math.random khác nhau -> correct khác nhau)', async () => {
+      const seen = new Set<number>();
+      for (const r of [0, 0.34, 0.67, 0.99]) {
+        jest.spyOn(Math, 'random').mockReturnValue(r);
+        const { saved } = await sinhDe();
+        for (const q of saved) {
+          expect(q.options[q.correct]).toBe('đúng');
+          seen.add(q.correct);
+        }
+        prisma.quiz.create.mockClear();
+        jest.restoreAllMocks();
+      }
+      expect(seen.size).toBeGreaterThan(1);
+    });
+
+    it('chấm đúng với chỉ số mới', async () => {
+      jest.spyOn(Math, 'random').mockReturnValue(0);
+      const { saved } = await sinhDe();
+      prisma.quiz.findUnique.mockResolvedValue({
+        id: 9,
+        userId: 1,
+        status: 'generated',
+        questionsJson: saved,
+      });
+      prisma.quiz.updateMany.mockResolvedValue({ count: 1 });
+      const res: any = await service.submitQuiz(
+        1,
+        9,
+        saved.map((q) => q.correct),
+      );
+      expect(res.score).toBe(10);
+    });
+  });
+
   describe('submitQuiz', () => {
     it('chấm theo SNAPSHOT trong DB, bỏ qua điểm client gửi', async () => {
       prisma.quiz.findUnique.mockResolvedValue({
@@ -95,6 +159,37 @@ describe('QuizzesService', () => {
       expect(res.score).toBe(1);
       expect(res.total).toBe(2);
       expect(prisma.reviewQuizResult.create).toHaveBeenCalled();
+    });
+
+    it('đáp án gửi dạng NGUYÊN VĂN text (khoá Python) vẫn được chấm đúng', async () => {
+      prisma.quiz.findUnique.mockResolvedValue({
+        id: 9,
+        userId: 1,
+        status: 'generated',
+        questionsJson: [
+          { question: 'Q1', options: ['"python" — text', 'khác'], correct: 0 },
+          { question: 'Q2', options: ['a', 'b'], correct: 1 },
+        ],
+      });
+      const res: any = await service.submitQuiz(1, 9, [
+        '"python" — text',
+        'a',
+      ]);
+      expect(res.score).toBe(1);
+    });
+
+    it('correct lưu dạng chữ, client gửi chỉ số (hoặc chữ khác hoa thường) -> đúng', async () => {
+      prisma.quiz.findUnique.mockResolvedValue({
+        id: 9,
+        userId: 1,
+        status: 'generated',
+        questionsJson: [
+          { question: 'Q1', options: ['Alpha', 'Beta'], correct: 'Beta' },
+          { question: 'Q2', options: ['x', 'y'], correct: 'x' },
+        ],
+      });
+      const res: any = await service.submitQuiz(1, 9, ['1', ' X ']);
+      expect(res.score).toBe(2);
     });
 
     it('quiz của người khác -> 403', async () => {
@@ -196,11 +291,13 @@ describe('QuizzesService', () => {
       // lessonId chỉ để tính trọng số ở backend, không được lộ ra FE.
       expect(serialized).not.toContain('lessonId');
       // Giữ đúng hợp đồng với FE: {index, question, options}.
+      // Thứ tự options bị xáo mỗi lần sinh đề nên chỉ so theo tập hợp.
       expect(res.questions[0]).toEqual({
         index: 0,
         question: expect.any(String),
-        options: ['a', 'b'],
+        options: expect.arrayContaining(['a', 'b']),
       });
+      expect(res.questions[0].options).toHaveLength(2);
 
       // Snapshot lưu DB PHẢI còn đáp án + lessonId để chấm và để tính trọng số
       // cho những lần ôn sau.
@@ -527,6 +624,61 @@ describe('QuizzesService', () => {
       const serialized = JSON.stringify(res);
       expect(serialized).not.toContain('correct');
       expect(serialized).not.toContain('explanation');
+    });
+
+    it('PE v3 (khoá Python): correct cấp câu hỏi + options object -> options thành chuỗi, không lộ cờ, chấm được bằng chữ', async () => {
+      const pe = (n: string) => ({
+        question: n,
+        correct: 1,
+        options: [
+          { text: 'sai ' + n, detail: 'd0', correct: false },
+          { text: 'đúng ' + n, detail: 'd1', correct: true },
+        ],
+      });
+      prisma.lessonProgress.findMany.mockResolvedValue([{ lessonId: 1 }]);
+      prisma.lesson.findMany.mockResolvedValue([
+        {
+          id: 1,
+          courseId: 'python',
+          contentJson: {
+            step_2: { mcq: ['C1', 'C2', 'C3', 'C4', 'C5'].map(pe) },
+          },
+        },
+      ]);
+      prisma.quiz.create.mockResolvedValue({ id: 56 });
+
+      const res: any = await service.generateQuiz(1, 'python');
+      expect(res.questions[0].options.every((o: any) => typeof o === 'string')).toBe(true);
+      expect(JSON.stringify(res)).not.toContain('correct');
+
+      const saved = prisma.quiz.create.mock.calls[0][0].data
+        .questionsJson as Array<any>;
+      prisma.quiz.findUnique.mockResolvedValue({
+        id: 56,
+        userId: 1,
+        status: 'generated',
+        questionsJson: saved,
+      });
+      const answers = saved.map((q) => q.options[q.correct]);
+      const out: any = await service.submitQuiz(1, 56, answers);
+      expect(out.score).toBe(5);
+    });
+
+    it('quiz cũ đã lưu options dạng object vẫn chấm đúng bằng chữ', async () => {
+      prisma.quiz.findUnique.mockResolvedValue({
+        id: 57,
+        userId: 1,
+        status: 'generated',
+        questionsJson: [
+          {
+            question: 'Q',
+            correct: 0,
+            options: [{ text: 'Một', correct: true }, { text: 'Hai' }],
+          },
+        ],
+      });
+      const out: any = await service.submitQuiz(1, 57, ['một']);
+      expect(out.score).toBe(1);
     });
 
     it('chấm điểm khớp: gửi vị trí lựa chọn đúng -> tính điểm', async () => {

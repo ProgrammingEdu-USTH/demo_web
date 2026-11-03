@@ -15,56 +15,34 @@ export interface OrderStepsProps {
 
 export default function OrderSteps({ items, onMove }: OrderStepsProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="![display:flex] ![flex-direction:column] ![gap:8px]">
       {items.map((item, i) => (
         <div
           key={item.id}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            background: 'var(--edu-panel-bg-solid)',
-            border: '1px solid var(--edu-sidebar-border)',
-            borderRadius: 10,
-            padding: '10px 14px',
-          }}
+          className="![display:flex] ![align-items:center] ![gap:12px] ![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:10px] ![padding:10px_14px]"
         >
           <span
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: '50%',
-              background: 'var(--edu-accent-soft)',
-              color: 'var(--edu-accent-text)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 11,
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
+            className="![width:22px] ![height:22px] ![border-radius:50%] ![background:var(--edu-accent-soft)] ![color:var(--edu-accent-text)] ![display:flex] ![align-items:center] ![justify-content:center] ![font-size:11px] ![font-weight:700] ![flex-shrink:0]"
           >
             {i + 1}
           </span>
-          <code style={{ flex: 1, fontSize: 13 }}>{item.content}</code>
-          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+          <code className="![flex:1] ![font-size:13px]">{item.content}</code>
+          <div className="![display:flex] ![gap:4px] ![flex-shrink:0]">
             <button
               type="button"
-              className={styles.chip}
+              className={`${styles.chip} ${i === 0 ? '![opacity:0.35]' : ''}`}
               disabled={i === 0}
               onClick={() => onMove(i, -1)}
               aria-label="Chuyển lên trên"
-              style={{ opacity: i === 0 ? 0.35 : 1 }}
             >
               ↑
             </button>
             <button
               type="button"
-              className={styles.chip}
+              className={`${styles.chip} ${i === items.length - 1 ? '![opacity:0.35]' : ''}`}
               disabled={i === items.length - 1}
               onClick={() => onMove(i, 1)}
               aria-label="Chuyển xuống dưới"
-              style={{ opacity: i === items.length - 1 ? 0.35 : 1 }}
             >
               ↓
             </button>

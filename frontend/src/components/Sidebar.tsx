@@ -56,6 +56,9 @@ const NAV_ICONS: Record<string, React.ReactNode> = {
   leader: (
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></svg>
   ),
+  arena: (
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5" /><path d="m13 19 6-6" /><path d="m16 16 4 4" /><path d="m19 21 2-2" /><path d="M14.5 6.5 18 3h3v3l-3.5 3.5" /><path d="m5 14 4 4" /><path d="m7 17-3 3" /><path d="m3 19 2 2" /></svg>
+  ),
   profile: (
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
   ),
@@ -68,6 +71,7 @@ const NAV_ITEMS: { page: string; label: string }[] = [
   { page: 'roadmap', label: 'Lộ trình' },
   { page: 'forum', label: 'Diễn đàn' },
   { page: 'leader', label: 'Xếp hạng' },
+  { page: 'arena', label: 'Đấu trường' },
   { page: 'profile', label: 'Cá nhân' },
 ];
 
@@ -96,12 +100,17 @@ export default function Sidebar({ activePage = 'dashboard' }: { activePage?: str
   // Điều hướng xong phải đóng ngăn kéo: trên SPA dashboard việc đổi tab KHÔNG
   // làm component này unmount, nên nếu không đóng tay thì ngăn kéo che luôn
   // trang vừa mở.
-  const go = (page: string) => { goToPage(page); setNavOpen(false); };
+  // 'arena' là route Next riêng (/arena), không phải tab SPA nên goToPage không hợp.
+  const go = (page: string) => {
+    if (page === 'arena') window.location.href = '/arena';
+    else goToPage(page);
+    setNavOpen(false);
+  };
 
   return (
     <>
-      <span id="sidebar-name" style={{ display: 'none' }}>—</span>
-      <span id="sidebar-role" style={{ display: 'none' }}>Học viên</span>
+      <span id="sidebar-name" hidden>—</span>
+      <span id="sidebar-role" hidden>Học viên</span>
 
       {/* Thanh trên cùng CHỈ hiện ở khổ điện thoại (CSS ẩn từ tablet trở lên):
           logo + nút ba gạch, đúng bố cục bản thiết kế mobile. */}
@@ -142,9 +151,8 @@ export default function Sidebar({ activePage = 'dashboard' }: { activePage?: str
 
         <div className="topbar-left">
           <div
-            className="brand brand-always"
+            className="brand brand-always cursor-pointer"
             onClick={() => { go('dashboard'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            style={{ cursor: 'pointer' }}
             title="Về trang chủ"
           >
             <span className="brand-title brand-full"><span className="brand-c1">Programming</span> <span className="brand-c2">EDU</span></span>
@@ -165,7 +173,7 @@ export default function Sidebar({ activePage = 'dashboard' }: { activePage?: str
               <span>{item.label}</span>
             </button>
           ))}
-          <button className="nav-btn" id="nav-admin" style={{ display: 'none' }} onClick={() => { window.location.href = '/admin'; }} aria-label="Quản trị">
+          <button className="nav-btn" id="nav-admin" hidden onClick={() => { window.location.href = '/admin'; }} aria-label="Quản trị">
             <span className="nav-icon">{NAV_ICONS.admin}</span><span>Quản trị</span>
           </button>
           <span className="nav-underline" id="nav-underline"></span>

@@ -32,10 +32,10 @@ export interface SandboxEditorProps {
   placeholder?: string;
 }
 
-const STATUS_STYLE: Record<SandboxTestRow['status'], { bg: string; text: string; label: string }> = {
-  pass: { bg: 'var(--st-ok-bg)', text: 'var(--st-ok-text)', label: '✓ Đạt' },
-  fail: { bg: 'var(--st-err-bg)', text: 'var(--st-err-text)', label: '✕ Chưa đạt' },
-  pending: { bg: 'var(--edu-card-bg)', text: 'var(--edu-t3)', label: '• Chưa chạy' },
+const STATUS_STYLE: Record<SandboxTestRow['status'], { cls: string; label: string }> = {
+  pass: { cls: '![background:var(--st-ok-bg)] ![color:var(--st-ok-text)]', label: '✓ Đạt' },
+  fail: { cls: '![background:var(--st-err-bg)] ![color:var(--st-err-text)]', label: '✕ Chưa đạt' },
+  pending: { cls: '![background:var(--edu-card-bg)] ![color:var(--edu-t3)]', label: '• Chưa chạy' },
 };
 
 export default function SandboxEditor({
@@ -64,27 +64,13 @@ export default function SandboxEditor({
           <span className={styles.langTag}>{langTag}</span>
         </div>
         <textarea
-          className={styles.codeBody}
           aria-label="Trình soạn mã Python"
           spellCheck={false}
           placeholder={placeholder}
           value={code}
           disabled={disabled}
           onChange={(e) => onCodeChange(e.target.value)}
-          style={{
-            width: '100%',
-            minHeight: 220,
-            resize: 'vertical',
-            border: 0,
-            outline: 'none',
-            color: 'var(--st-syn-plain)',
-            background: 'transparent',
-            fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
-            fontSize: 13,
-            lineHeight: 1.7,
-            // Tab thay vì nhảy focus: đang gõ code thụt lề là chuyện thường.
-            tabSize: 4,
-          }}
+          className={`${styles.codeBody} ![width:100%] ![min-height:220px] ![resize:vertical] ![border:0] ![outline:none] ![color:var(--st-syn-plain)] ![background:transparent] ![font-family:JetBrains_Mono,ui-monospace,SFMono-Regular,Menlo,monospace] ![font-size:13px] ![line-height:1.7] ![tab-size:4]`}
           onKeyDown={(e) => {
             if (e.key !== 'Tab') return;
             e.preventDefault();
@@ -126,38 +112,31 @@ export default function SandboxEditor({
       />
 
       {tests.length > 0 && (
-        <div style={{ marginTop: 16, background: 'var(--edu-card-bg)', borderRadius: 12, padding: 14 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--edu-t1)', marginBottom: 10 }}>
+        <div className="![margin-top:16px] ![background:var(--edu-card-bg)] ![border-radius:12px] ![padding:14px]">
+          <div className="![font-size:13px] ![font-weight:700] ![color:var(--edu-t1)] ![margin-bottom:10px]">
             Kiểm thử &nbsp;
-            <span style={{ color: 'var(--edu-t3)', fontWeight: 500 }}>
+            <span className="![color:var(--edu-t3)] ![font-weight:500]">
               {passed}/{tests.length} đạt
             </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="![display:flex] ![flex-direction:column] ![gap:8px]">
             {tests.map((t, i) => {
               const style = STATUS_STYLE[t.status];
               return (
                 <div
                   key={i}
-                  style={{
-                    background: 'var(--edu-panel-bg-solid)',
-                    border: '1px solid var(--edu-sidebar-border)',
-                    borderRadius: 8,
-                    padding: '8px 12px',
-                    fontSize: 13,
-                  }}
+                  className="![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:8px] ![padding:8px_12px] ![font-size:13px]"
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <span style={{ color: 'var(--edu-t1)' }}>{t.label}</span>
+                  <div className="![display:flex] ![align-items:center] ![justify-content:space-between] ![gap:10px]">
+                    <span className="![color:var(--edu-t1)]">{t.label}</span>
                     <span
-                      className={styles.chip}
-                      style={{ background: style.bg, color: style.text, border: 0, cursor: 'default', flexShrink: 0 }}
+                      className={`${styles.chip} ${style.cls} ![border:0] ![cursor:default] ![flex-shrink:0]`}
                     >
                       {style.label}
                     </span>
                   </div>
                   {t.detail && t.status !== 'pending' && (
-                    <div style={{ fontSize: 12, color: 'var(--edu-t3)', marginTop: 4 }}>{t.detail}</div>
+                    <div className="![font-size:12px] ![color:var(--edu-t3)] ![margin-top:4px]">{t.detail}</div>
                   )}
                 </div>
               );

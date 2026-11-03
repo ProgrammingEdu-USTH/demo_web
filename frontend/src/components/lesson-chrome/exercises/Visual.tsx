@@ -30,39 +30,39 @@ export default function Visual({ stack, heap }: VisualProps) {
     gap: 10,
   };
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+    <div className="![display:grid] ![grid-template-columns:1fr_1fr] ![gap:16px]">
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--edu-accent)', marginBottom: 8 }}>● Stack</div>
+        <div className="![font-size:13px] ![font-weight:700] ![color:var(--edu-accent)] ![margin-bottom:8px]">● Stack</div>
         <div style={col}>
           {stack.map((s, i) => (
-            <div key={i} style={{ borderBottom: i < stack.length - 1 ? '1px solid var(--edu-sidebar-border)' : undefined, paddingBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <code style={{ color: 'var(--edu-accent-text)', fontWeight: 700 }}>{s.name}</code>
-                <code style={{ color: 'var(--edu-t3)' }}>{s.address}</code>
+            <div key={i} className={`![padding-bottom:8px] ${i < stack.length - 1 ? '![border-bottom:1px_solid_var(--edu-sidebar-border)]' : ''}`}>
+              <div className="![display:flex] ![justify-content:space-between] ![font-size:13px]">
+                <code className="![color:var(--edu-accent-text)] ![font-weight:700]">{s.name}</code>
+                <code className="![color:var(--edu-t3)]">{s.address}</code>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--edu-t3)', marginTop: 2 }}>{s.note}</div>
+              <div className="![font-size:12px] ![color:var(--edu-t3)] ![margin-top:2px]">{s.note}</div>
             </div>
           ))}
         </div>
       </div>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--edu-accent)', marginBottom: 8 }}>● Heap</div>
+        <div className="![font-size:13px] ![font-weight:700] ![color:var(--edu-accent)] ![margin-bottom:8px]">● Heap</div>
         <div style={col}>
           {heap.map((h, i) => (
             <div key={i}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <span className={styles.chip} style={{ background: 'var(--edu-accent)', color: 'var(--edu-panel-bg-solid)', border: 0, cursor: 'default' }}>
+              <div className="![display:flex] ![align-items:center] ![gap:8px] ![margin-bottom:6px]">
+                <span className={`${styles.chip} ![background:var(--edu-accent)] ![color:var(--edu-panel-bg-solid)] ![border:0] ![cursor:default]`} >
                   {h.tag}
                 </span>
-                <code style={{ fontSize: 11, color: 'var(--edu-t3)' }}>@ {h.address}</code>
-                <span className={styles.chip} style={{ marginLeft: 'auto', background: 'var(--st-ok-bg)', color: 'var(--st-ok-text)', border: 0, cursor: 'default' }}>
+                <code className="![font-size:11px] ![color:var(--edu-t3)]">@ {h.address}</code>
+                <span className={`${styles.chip} ![margin-left:auto] ![background:var(--st-ok-bg)] ![color:var(--st-ok-text)] ![border:0] ![cursor:default]`} >
                   Refcount: {h.refcount}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="![display:flex] ![gap:8px] ![flex-wrap:wrap]">
                 {h.rows.map((r, j) => (
-                  <div key={j} style={{ fontSize: 11, color: 'var(--edu-t3)' }}>
-                    {r.label} <code style={{ color: 'var(--edu-t1)', fontWeight: 700 }}>{r.value}</code>
+                  <div key={j} className="![font-size:11px] ![color:var(--edu-t3)]">
+                    {r.label} <code className="![color:var(--edu-t1)] ![font-weight:700]">{r.value}</code>
                   </div>
                 ))}
               </div>

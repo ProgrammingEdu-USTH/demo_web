@@ -22,7 +22,7 @@ export default function Multi({ instruction, options, selected, onToggle, correc
   return (
     <div>
       {instruction && (
-        <p style={{ fontSize: 13, color: 'var(--edu-t3)', margin: '0 0 16px' }}>{instruction}</p>
+        <p className="![font-size:13px] ![color:var(--edu-t3)] ![margin:0_0_16px]">{instruction}</p>
       )}
       <div className={styles.optionsList}>
         {options.map((opt) => {
@@ -61,7 +61,7 @@ export default function Multi({ instruction, options, selected, onToggle, correc
               >
                 {isWrong ? '✕' : '✓'}
               </span>
-              <span className={styles.optionMain} style={{ flex: 1 }}>
+              <span className={`${styles.optionMain} ![flex:1]`} >
                 <code>{opt.label}</code>
                 {opt.sub && <span className={styles.optionSub}>{opt.sub}</span>}
               </span>

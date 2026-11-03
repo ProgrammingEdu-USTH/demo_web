@@ -300,7 +300,7 @@ export default function LessonChromeDemoPage() {
             termIcon={Icon.code}
             term="Biến (Variable)"
             description="Một vùng định danh trong bộ nhớ dùng để lưu trữ giá trị và có thể gán lại bất kỳ lúc nào."
-            code={[{ num: 1, content: <><span style={{ color: 'var(--st-syn-keyword)' }}>age</span> = <span style={{ color: 'var(--st-syn-number)' }}>18</span> <span style={{ color: 'var(--st-syn-comment)' }}># Khởi tạo biến age với số nguyên</span></> }]}
+            code={[{ num: 1, content: <><span className="text-[color:var(--st-syn-keyword)]">age</span> = <span className="text-[color:var(--st-syn-number)]">18</span> <span className="text-[color:var(--st-syn-comment)]"># Khởi tạo biến age với số nguyên</span></> }]}
           />
         )}
 
@@ -308,10 +308,10 @@ export default function LessonChromeDemoPage() {
           <CodeBlock
             filename="functions.py"
             lines={[
-              { num: 1, content: <><span style={{ color: 'var(--st-syn-keyword)' }}>def</span> chao_mung(ten):</> },
-              { num: 2, content: <span style={{ color: 'var(--st-syn-comment)' }}># Ghép chuỗi và in ra màn hình</span> },
-              { num: 3, content: <>thong_diep = <span style={{ color: 'var(--st-syn-string)' }}>f&quot;Xin chào, {'{ten}'}!&quot;</span></> },
-              { num: 4, content: <><span style={{ color: 'var(--st-syn-keyword)' }}>return</span> thong_diep</> },
+              { num: 1, content: <><span className="text-[color:var(--st-syn-keyword)]">def</span> chao_mung(ten):</> },
+              { num: 2, content: <span className="text-[color:var(--st-syn-comment)]"># Ghép chuỗi và in ra màn hình</span> },
+              { num: 3, content: <>thong_diep = <span className="text-[color:var(--st-syn-string)]">f&quot;Xin chào, {'{ten}'}!&quot;</span></> },
+              { num: 4, content: <><span className="text-[color:var(--st-syn-keyword)]">return</span> thong_diep</> },
             ]}
           />
         )}
@@ -471,7 +471,7 @@ export default function LessonChromeDemoPage() {
             <FillBlank
               filename="main.py"
               langTag="Python 3.11"
-              beforeLines={[{ num: 1, content: <span style={{ color: 'var(--st-syn-comment)' }}># Khởi tạo danh sách sinh viên</span> }]}
+              beforeLines={[{ num: 1, content: <span className="text-[color:var(--st-syn-comment)]"># Khởi tạo danh sách sinh viên</span> }]}
               blankLine={{ num: 2, before: 'danh_sach = ', after: '' }}
               afterLines={[{ num: 3, content: 'danh_sach.append("Minh")' }, { num: 4, content: 'print(len(danh_sach))' }]}
               value={blankValue}

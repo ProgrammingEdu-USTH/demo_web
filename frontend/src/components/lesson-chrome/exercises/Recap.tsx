@@ -15,65 +15,42 @@ export interface RecapProps {
   onFinish: () => void;
 }
 
+// Số cột theo số mục: viết nguyên văn để Tailwind quét được class.
+const COLS_CLS = ['grid-cols-1', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6'];
+
 export default function Recap({ xpLabel, title, description, stats, facts, onFinish }: RecapProps) {
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div className="![text-align:center]">
       <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          background: 'var(--edu-panel-bg-solid)',
-          border: '1px solid var(--edu-sidebar-border)',
-          borderRadius: 999,
-          padding: '10px 20px',
-          fontSize: 22,
-          fontWeight: 800,
-          color: 'var(--edu-accent-text)',
-        }}
+        className="![display:inline-flex] ![align-items:center] ![gap:8px] ![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:999px] ![padding:10px_20px] ![font-size:22px] ![font-weight:800] ![color:var(--edu-accent-text)]"
       >
         💎 {xpLabel} ✨
       </span>
-      <h2 style={{ fontSize: 24, fontWeight: 800, margin: '16px 0 8px', color: 'var(--edu-t1)' }}>{title}</h2>
-      <p style={{ fontSize: 14, color: 'var(--edu-t3)', maxWidth: 460, margin: '0 auto 20px' }}>{description}</p>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: 12, marginBottom: 20 }}>
+      <h2 className="![font-size:24px] ![font-weight:800] ![margin:16px_0_8px] ![color:var(--edu-t1)]">{title}</h2>
+      <p className="![font-size:14px] ![color:var(--edu-t3)] ![max-width:460px] ![margin:0_auto_20px]">{description}</p>
+      <div className={`grid ${COLS_CLS[Math.min(stats.length, COLS_CLS.length - 1)]} ![gap:12px] ![margin-bottom:20px]`}>
         {stats.map((s, i) => (
           <div
             key={i}
-            style={{
-              background: 'var(--edu-panel-bg-solid)',
-              border: '1px solid var(--edu-sidebar-border)',
-              borderRadius: 12,
-              padding: 16,
-            }}
+            className="![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:12px] ![padding:16px]"
           >
-            <div style={{ fontSize: 22 }}>{s.icon}</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--edu-t1)', margin: '6px 0 2px' }}>{s.value}</div>
-            <div style={{ fontSize: 11, color: 'var(--edu-t3)' }}>{s.label}</div>
+            <div className="![font-size:22px]">{s.icon}</div>
+            <div className="![font-size:18px] ![font-weight:800] ![color:var(--edu-t1)] ![margin:6px_0_2px]">{s.value}</div>
+            <div className="![font-size:11px] ![color:var(--edu-t3)]">{s.label}</div>
           </div>
         ))}
       </div>
-      <div style={{ textAlign: 'left' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--edu-t2)', marginBottom: 8 }}>
+      <div className="![text-align:left]">
+        <div className="![font-size:12px] ![font-weight:700] ![color:var(--edu-t2)] ![margin-bottom:8px]">
           📖 KIẾN THỨC CỐT LÕI ĐÃ HỌC
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="![display:flex] ![flex-direction:column] ![gap:8px]">
           {facts.map((f, i) => (
             <div
               key={i}
-              style={{
-                display: 'flex',
-                gap: 10,
-                alignItems: 'flex-start',
-                background: 'var(--edu-panel-bg-solid)',
-                border: '1px solid var(--edu-sidebar-border)',
-                borderRadius: 10,
-                padding: '10px 14px',
-                fontSize: 13,
-                color: 'var(--edu-t1)',
-              }}
+              className="![display:flex] ![gap:10px] ![align-items:flex-start] ![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:10px] ![padding:10px_14px] ![font-size:13px] ![color:var(--edu-t1)]"
             >
-              <span style={{ color: 'var(--st-ok-text)' }}>✓</span>
+              <span className="![color:var(--st-ok-text)]">✓</span>
               {f}
             </div>
           ))}
@@ -82,18 +59,7 @@ export default function Recap({ xpLabel, title, description, stats, facts, onFin
       <button
         type="button"
         onClick={onFinish}
-        style={{
-          width: '100%',
-          height: 52,
-          borderRadius: 999,
-          border: 0,
-          background: 'var(--edu-accent-grad)',
-          color: 'var(--edu-panel-bg-solid)',
-          fontWeight: 700,
-          fontSize: 15,
-          cursor: 'pointer',
-          marginTop: 20,
-        }}
+        className="![width:100%] ![height:52px] ![border-radius:999px] ![border:0] ![background:var(--edu-accent-grad)] ![color:var(--edu-panel-bg-solid)] ![font-weight:700] ![font-size:15px] ![cursor:pointer] ![margin-top:20px]"
       >
         Hoàn thành ✓
       </button>

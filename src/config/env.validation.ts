@@ -30,6 +30,17 @@ export const envValidationSchema = Joi.object({
     .valid('lax', 'strict', 'none')
     .default('lax'),
 
+  // Path của cookie refresh, khớp đường proxy /backend của frontend.
+  REFRESH_COOKIE_PATH: Joi.string().pattern(/^[/]/).default('/backend/auth'),
+
+  // Bí mật chung giữa proxy frontend (Vercel) và backend: có thì backend từ
+  // chối mọi request không đi qua proxy. Bắt buộc ở production.
+  PROXY_SECRET: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().min(32).required(),
+    otherwise: Joi.string().min(32).optional().allow(''),
+  }),
+
   FRONTEND_URL: Joi.string().uri().required(),
   ALLOWED_ORIGINS: Joi.string().required(),
 

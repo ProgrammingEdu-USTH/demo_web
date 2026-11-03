@@ -8,12 +8,13 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
-import { IsArray } from 'class-validator';
+import { ArrayMaxSize, IsArray } from 'class-validator';
 import { CurrentUserId } from 'src/common/decorators/current-user.decorator';
 import { QuizzesService } from './quizzes.service';
 
 export class SubmitQuizDto {
   @IsArray({ message: 'Danh sách câu trả lời không hợp lệ' })
+  @ArrayMaxSize(200, { message: 'Quá nhiều câu trả lời' })
   answers!: unknown[];
 }
 

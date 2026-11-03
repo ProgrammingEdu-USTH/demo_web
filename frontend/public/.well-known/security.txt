@@ -1,0 +1,5 @@
+# Báo lỗ hổng bảo mật cho Programming EDU (RFC 9116).
+# Vui lòng báo riêng qua GitHub Security Advisory, không mở issue công khai.
+Contact: https://github.com/TuyetMieu/demo_web/security/advisories/new
+Expires: 2027-10-12T00:00:00.000Z
+Preferred-Languages: vi, en

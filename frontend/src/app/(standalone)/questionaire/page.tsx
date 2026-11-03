@@ -81,6 +81,7 @@ export default function QuestionairePage() {
               <label className="option"><input type="radio" name="experience" value="Có (trung cấp trở lên)" /> Có (trung cấp trở lên)</label>
             </div>
 
+            {/* Giữ style nội tuyến: questionaire.js đọc style.display === 'none' để biết mục này đang ẩn (thuộc tính hidden sẽ làm nó hiểu nhầm là đang hiện). */}
             <div className="question-block sub-question" id="sub_language_section" style={{ display: 'none' }}>
               <p className="question">Nếu có, bạn đã học ngôn ngữ nào?</p>
               <label className="option"><input type="checkbox" name="language" value="Python" /> Python</label>

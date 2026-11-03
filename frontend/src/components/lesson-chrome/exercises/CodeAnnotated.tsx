@@ -18,27 +18,21 @@ export interface CodeAnnotatedProps {
 
 export default function CodeAnnotated({ filename, langTag, code, annotations }: CodeAnnotatedProps) {
   return (
-    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-      <div style={{ flex: '1 1 300px', minWidth: 0 }}>
+    <div className="![display:flex] ![gap:16px] ![flex-wrap:wrap] ![align-items:flex-start]">
+      <div className="![flex:1_1_300px] ![min-width:0]">
         <CodeBlock filename={filename} langTag={langTag} lines={code} />
       </div>
-      <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="![flex:1_1_220px] ![display:flex] ![flex-direction:column] ![gap:10px]">
         {annotations.map((a, i) => (
           <div
             key={i}
-            style={{
-              background: 'var(--edu-card-bg)',
-              border: '1px solid var(--edu-sidebar-border)',
-              borderRadius: 10,
-              padding: '10px 14px',
-              fontSize: 13,
-            }}
+            className="![background:var(--edu-card-bg)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:10px] ![padding:10px_14px] ![font-size:13px]"
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--edu-t1)', fontWeight: 600 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--edu-accent)', flexShrink: 0 }} />
+            <div className="![display:flex] ![align-items:center] ![gap:8px] ![color:var(--edu-t1)] ![font-weight:600]">
+              <span className="![width:6px] ![height:6px] ![border-radius:50%] ![background:var(--edu-accent)] ![flex-shrink:0]" />
               {a.label}
             </div>
-            <div style={{ color: 'var(--edu-t3)', marginTop: 4 }}>{a.detail}</div>
+            <div className="![color:var(--edu-t3)] ![margin-top:4px]">{a.detail}</div>
           </div>
         ))}
       </div>

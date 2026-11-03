@@ -41,7 +41,7 @@ export default function LessonBrief({
           </span>
         ))}
       </p>
-      <h1 className={styles.title}>{title}</h1>
+      <h2 className={styles.title}>{title}</h2>
       {goal && <p className={styles.goal}>{goal}</p>}
 
       <section className={styles.task}>

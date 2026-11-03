@@ -5,11 +5,13 @@ import type { CookieOptions, Request, Response } from 'express';
  * (kể cả script bị chèn qua XSS) không đọc được, nên một lỗ XSS không còn đủ
  * để mang phiên 8 giờ của người dùng đi nơi khác.
  *
- * path=/auth: trình duyệt chỉ gửi cookie tới /auth/refresh và /auth/logout,
- * không đính kèm vào mọi request /api/*.
+ * path mặc định /backend/auth: trình duyệt gọi backend qua proxy cùng origin
+ * /backend (frontend/src/proxy.ts), nên chỉ gửi cookie tới /backend/auth/refresh
+ * và /backend/auth/logout, không đính kèm vào trang hay request /api/*.
+ * REFRESH_COOKIE_PATH đổi được khi gọi backend trực tiếp (vd /auth).
  */
 export const REFRESH_COOKIE = 'pe_refresh';
-const COOKIE_PATH = '/auth';
+const COOKIE_PATH = process.env.REFRESH_COOKIE_PATH || '/backend/auth';
 
 type SameSite = 'lax' | 'strict' | 'none';
 

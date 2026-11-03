@@ -1,12 +1,16 @@
 'use client';
 
-// Port dashboard.html (extends base.html) — SPA-hub: các "trang" Dashboard/
-// Khóa học/Lộ trình/Kỹ năng/Diễn đàn/Cài đặt/Trang của tôi chuyển client-side
-// bằng main.js navigate() trong CÙNG route này (không tách route Next — giữ UX cũ).
-// CSS đúng tổ hợp gốc (dashboard.html block extra_head, thứ tự giữ nguyên).
+// F-02: file này TRƯỚC LÀ app/(base)/dashboard/page.tsx (SPA 7 "trang" của dashboard.html).
+// Giờ mỗi route thật (/dashboard, /courses, /community, /profile, /settings) mount lại
+// CÙNG markup + JS legacy nhưng chỉ hiện đúng 1 "trang" (prop `page`), nằm trong AppShell.
+// Vì sao chưa viết lại bằng React: ~20 API + dashboard.js/main.js/roadmap.js (hơn 5000 dòng)
+// đổ dữ liệu theo id; giữ id nguyên để KHÔNG mất chức năng, viết lại từng khối ở vòng sau.
+// Sidebar/HeaderBar legacy vẫn render nhưng ẩn (JS legacy tìm id trong đó) — vỏ thật là AppShell.
+
+import { useRouter } from 'next/navigation';
+import { useEffect, useLayoutEffect } from 'react';
 
 import PageStyles from '@/components/PageStyles';
-import Chatbot from '@/components/Chatbot';
 import LegacyScripts from '@/components/LegacyScripts';
 import PeRouterBridge from '@/components/PeRouterBridge';
 import RoadmapSection from '@/components/RoadmapSection';
@@ -16,47 +20,109 @@ import HeaderBar from '@/components/HeaderBar';
 /* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 const W = () => window as any;
 
+export type HubPage = 'dashboard' | 'courses' | 'roadmap' | 'leader' | 'skills' | 'forum' | 'settings' | 'profile';
+
+// "Trang" legacy → route thật (khớp bảng chuyển hướng trong design/PAGES.md §2).
+const ROUTE_OF: Record<string, string> = {
+  dashboard: '/dashboard',
+  courses: '/courses',
+  'my-courses': '/courses',
+  roadmap: '/courses?tab=roadmap',
+  forum: '/community',
+  leader: '/community?tab=rank',
+  skills: '/profile?tab=skills',
+  profile: '/profile',
+  settings: '/settings',
+};
+export const routeOfHubPage = (p: string) => ROUTE_OF[p];
+
+// Hash cũ (/dashboard#courses…) → route mới; chỉ dùng cho link/bookmark cũ.
+const PAGE_OF_HASH = ROUTE_OF;
+
 // Thứ tự script y hệt cuối dashboard.html (mermaid → svg-pan-zoom → roadmapData
 // → roadmap → main → chatbot → dashboard); icons.js vốn nằm ở <head> base.html.
 const SCRIPTS = [
   '/static/js/icons.js',
-  'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js',
-  'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js',
+  '/static/vendor/mermaid/mermaid.min.js',
+  '/static/vendor/svg-pan-zoom/svg-pan-zoom.min.js',
   '/static/js/roadmapData.js',
   '/static/js/roadmap.js',
   '/static/js/main.js',
-  '/static/js/chatbot.js',
   // menu người dùng + chuông thông báo — dùng chung với trang chi tiết khóa
   // học và 3 trang khóa CSDL (trước đây mỗi trang một bản, xem edu-chrome.js)
   '/static/js/edu-chrome.js',
   '/static/js/dashboard.js',
   // sau cùng: đổ dữ liệu cho các khối mới của màn dash theo design
   '/static/js/edu-dashboard.js',
-  // bài ôn tập tự sinh (thẻ "Ôn tập hôm nay") — phải sau edu-dashboard.js vì
-  // nút "Ôn ngay" ở đó gọi window.peOpenReviewQuiz
-  '/static/js/edu-review-quiz.js',
 ];
 
-export default function DashboardPage() {
+// hideDash: toàn bộ lưới dashboard đã có bản React (DashboardHead + DashboardPanels) — vẫn giữ DOM trong <div hidden> vì edu-dashboard.js / edu-review-quiz.js tìm id ở đó.
+// hideTop: khối "Bài học gần đây" + ô streak/bài hoàn thành đã có bản React (DashboardHead) — giữ DOM legacy nhưng ẩn để JS cũ không lỗi.
+export default function LegacyHub({ page, hideTop = false, hideDash = false }: { page: HubPage; hideTop?: boolean; hideDash?: boolean }) {
+  const router = useRouter();
+  const pg = (id: string) => (id === page ? 'page active' : 'page');
+
+  // Đặt "trang" cần hiện TRƯỚC khi main.js khởi tạo (nó đọc __pePendingTab rồi gọi navigate).
+  useLayoutEffect(() => {
+    W().__pePendingTab = page;
+    W().__peHubPage = page; // wrapper navigate đọc giá trị mới nhất, không bị closure cũ
+  }, [page]);
+
+  // Đổi ?tab= trong cùng route (vd /courses ↔ /courses?tab=roadmap): JS legacy đã nạp, chỉ cần đổi trang hiện.
+  useEffect(() => {
+    if (typeof W().navigate === 'function') W().navigate(page);
+  }, [page]);
+
+  useEffect(() => {
+    // Link cũ /dashboard#courses → route thật.
+    if (page === 'dashboard') {
+      const h = window.location.hash.replace('#', '');
+      const target = PAGE_OF_HASH[h];
+      if (h && h !== 'dashboard' && target) router.replace(target);
+    }
+    // JS legacy gọi navigate()/peGoTab() để đổi "trang" → chuyển thành điều hướng route thật
+    // (URL đổi, Back chạy). Gắn sau khi script legacy nạp xong; navigate gốc giữ lại để hiện trang.
+    const hook = () => {
+      const w = W();
+      if (typeof w.navigate === 'function' && !w.navigate.__peHub) {
+        const orig = w.navigate;
+        const wrapped = (p: string) => {
+          const route = ROUTE_OF[p];
+          if (route && p !== w.__peHubPage) router.push(route);
+          else orig(p);
+        };
+        wrapped.__peHub = true;
+        w.navigate = wrapped;
+      }
+      w.peGoTab = (tab: string) => router.push(ROUTE_OF[tab] ?? '/dashboard');
+    };
+    hook();
+    document.addEventListener('pe:legacy-ready', hook);
+    return () => document.removeEventListener('pe:legacy-ready', hook);
+  }, [page, router]);
+
   return (
     <>
-      <PageStyles hrefs={["/static/css/style.css","/static/css/dashboard.css","/static/css/pages.css","/static/css/ChangePassword.css","/static/css/skeleton.css","/static/css/dark-mode.css","/static/css/roadmap.css","/static/css/edu-theme.css","/static/css/edu-dashboard.css","/static/css/edu-review-quiz.css"]} />
+      <PageStyles hrefs={["/static/css/style.css","/static/css/dashboard.css","/static/css/pages.css","/static/css/ChangePassword.css","/static/css/skeleton.css","/static/css/dark-mode.css","/static/css/roadmap.css","/static/css/edu-theme.css","/static/css/edu-dashboard.css"]} />
       <title>Programming EDU</title>
       {/* PERF 2026-07-19: mermaid + svg-pan-zoom tải từ jsdelivr — preconnect
           cắt DNS+TLS handshake khỏi đường găng nạp script */}
-      <link rel="preconnect" href="https://cdn.jsdelivr.net" />
       <PeRouterBridge remountKey="dashboard" />
-      <Sidebar />
-
-      <div id="main">
+      {/* Vỏ cũ chỉ để JS legacy tìm id (tên người dùng, nút admin, chuông…); AppShell lo hiển thị. */}
+      <div hidden>
+        <Sidebar />
         <HeaderBar />
+      </div>
+
+      <div id="main" className="pe-hub">
         {/* ── Dashboard ── */}
         {/* Bố cục 1:1 theo "Programming EDU.dc.html" (màn dash): cột trái
             Bài học gần đây + Cuộc thi, cột phải Bảng xếp hạng + ô thống kê.
             edu-dashboard.js đổ dữ liệu vào các id edu-d-*. Lịch học / mini
             roadmap / tiến độ không có trong design nên đã chuyển xuống mục
             Khóa học (giữ nguyên id để main.js + dashboard.js vẫn tìm thấy). */}
-        <div className="page active" id="page-dashboard">
+        <div className={pg("dashboard")} id="page-dashboard">
+          <div hidden={hideDash}>
           <div className="edu-d-grid">
             {/* ── Cột trái ── */}
             <div className="edu-d-col">
@@ -129,15 +195,16 @@ export default function DashboardPage() {
               </section>
 
               <div className="edu-d-stats">
-                <div className="edu-d-bigstats" id="edu-d-bigstats"></div>
+                <div hidden={hideTop}><div className="edu-d-bigstats" id="edu-d-bigstats"></div></div>
                 <div className="edu-d-card edu-d-ministats" id="edu-d-ministats"></div>
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         {/* ── Courses ── */}
-        <div className="page" id="page-courses">
+        <div className={pg("courses")} id="page-courses">
 
           <div className="courses-header fx-fade-up">
             <div>
@@ -226,10 +293,10 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Roadmap (partial roadmap.html) ── */}
-        <RoadmapSection />
+        <RoadmapSection active={page === 'roadmap'} />
 
         {/* ── Xếp hạng — lb-card widget moved here (unchanged ids) from Dashboard ── */}
-        <div className="page" id="page-leader">
+        <div className={pg("leader")} id="page-leader">
           <div className="courses-header fx-fade-up">
             <div>
               <h2>🏆 Bảng xếp hạng</h2>
@@ -271,7 +338,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Skills ── */}
-        <div className="page" id="page-skills">
+        <div className={pg("skills")} id="page-skills">
           <div className="courses-header fx-fade-up">
             <h2>🐙 Kỹ năng</h2>
           </div>
@@ -296,7 +363,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Forum ── */}
-        <div className="page" id="page-forum">
+        <div className={pg("forum")} id="page-forum">
           <div className="courses-header fx-fade-up">
             <div>
               <h2>💬 Diễn đàn</h2>
@@ -374,7 +441,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Settings ── */}
-        <div className="page" id="page-settings">
+        <div className={pg("settings")} id="page-settings">
           <div className="settings-wrap">
             <div className="settings-section">
               <div className="settings-section-title"><span className="title-icon-blue">👤</span><span>Thông tin cá nhân</span></div>
@@ -444,7 +511,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ══════════ TRANG CỦA TÔI ══════════ */}
-        <div className="page" id="page-profile">
+        <div className={pg("profile")} id="page-profile">
           <div className="prof-wrap">
             {/* Hero card */}
             <div className="prof-hero fx-fade-up">
@@ -664,30 +731,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ★ HỘP THOẠI BÀI ÔN TẬP — nút "Ôn ngay" ở thẻ "Ôn tập hôm nay" mở cái
-          này thay vì chỉ nhảy sang tab Kỹ năng. Nội dung do edu-review-quiz.js
-          đổ vào (gọi /courses/:id/quiz/generate — backend tự sinh câu hỏi từ
-          các bài user ĐÃ hoàn thành). Để rỗng ở đây: React không giữ state nào
-          cho khối này nên không ghi đè lên phần JS đã vẽ. */}
-      <div className="edu-rq-overlay" id="edu-rq-overlay" role="dialog" aria-modal="true" aria-labelledby="edu-rq-title">
-        <div className="edu-rq-card">
-          <div className="edu-rq-head">
-            <div className="edu-rq-heads">
-              <div className="edu-rq-title" id="edu-rq-title">Ôn tập hôm nay</div>
-              <div className="edu-rq-sub" id="edu-rq-sub"></div>
-            </div>
-            <button type="button" className="edu-rq-close" id="edu-rq-close" aria-label="Đóng">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-            </button>
-          </div>
-          <div className="edu-rq-track" hidden><div className="edu-rq-bar" id="edu-rq-bar"></div></div>
-          <div className="edu-rq-body" id="edu-rq-body"></div>
-          <div className="edu-rq-foot" id="edu-rq-foot"></div>
-        </div>
-      </div>
-
-      <Chatbot />
-
+      {/* Hộp thoại ôn tập đã chuyển sang ReviewQuizDialog; chatbot do (app)/layout lo. */}
       <LegacyScripts srcs={SCRIPTS} />
     </>
   );

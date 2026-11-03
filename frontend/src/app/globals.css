@@ -1,0 +1,188 @@
+/* ============================================================================
+   Design system — token + reset có phạm vi (design/SYSTEM.md).
+   Nạp MỘT lần ở src/app/layout.tsx (import './globals.css').
+
+   Vì sao không reset toàn cục: các trang legacy (/static/css/*) vẫn chạy trong
+   lúc chuyển tiếp và dựa vào style mặc định của trình duyệt. Preflight đã tắt
+   (tailwind.config.ts); phần reset bên dưới chỉ áp trong .ui-scope — vỏ trang
+   mới (AppShell) và portal của Dialog/Sheet/Toast tự gắn class này.
+   Tên biến dùng tiền tố --ui- để không đụng --edu-* của edu-theme.css.
+   ========================================================================== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Màu dạng "R G B" → Tailwind ghép được độ trong: bg-primary/10. */
+  :root {
+  --ui-bg: 250 248 245; /* #FAF8F5 */
+  --ui-surface: 255 255 255; /* #FFFFFF */
+  --ui-surface-2: 243 240 235; /* #F3F0EB */
+  --ui-surface-3: 233 229 222; /* #E9E5DE */
+  --ui-border: 228 223 215; /* #E4DFD7 */
+  --ui-border-strong: 140 133 123; /* #8C857B */
+  --ui-fg: 28 26 35; /* #1C1A23 */
+  --ui-fg-muted: 92 88 102; /* #5C5866 */
+  --ui-primary: 91 63 209; /* #5B3FD1 */
+  --ui-primary-hover: 74 48 181; /* #4A30B5 */
+  --ui-primary-fg: 255 255 255; /* #FFFFFF */
+  --ui-primary-soft: 238 234 251; /* #EEEAFB */
+  --ui-primary-soft-fg: 68 41 168; /* #4429A8 */
+  --ui-accent: 180 83 9; /* #B45309 */
+  --ui-accent-soft: 253 240 213; /* #FDF0D5 */
+  --ui-accent-soft-fg: 146 64 14; /* #92400E */
+  --ui-success: 21 128 61; /* #15803D */
+  --ui-success-soft: 231 246 236; /* #E7F6EC */
+  --ui-success-soft-fg: 22 101 52; /* #166534 */
+  --ui-danger: 198 40 40; /* #C62828 */
+  --ui-danger-hover: 166 31 31; /* #A61F1F */
+  --ui-danger-fg: 255 255 255; /* #FFFFFF */
+  --ui-danger-soft: 253 236 234; /* #FDECEA */
+  --ui-danger-soft-fg: 180 35 24; /* #B42318 */
+  --ui-warning: 180 83 9; /* #B45309 */
+  --ui-warning-soft: 253 240 213; /* #FDF0D5 */
+  --ui-warning-soft-fg: 146 64 14; /* #92400E */
+  --ui-info: 29 99 201; /* #1D63C9 */
+  --ui-info-soft: 230 239 252; /* #E6EFFC */
+  --ui-info-soft-fg: 26 86 176; /* #1A56B0 */
+  --ui-ring: 91 63 209; /* #5B3FD1 */
+  --ui-overlay: 28 26 35; /* #1C1A23 */
+    --ui-shadow: 60 40 20;
+    color-scheme: light;
+  }
+
+  /* Chế độ tối: class `dark` trên <body> (cơ chế có sẵn của web).
+     Nền xanh than chứ không đen tuyền — đỡ chói khi code lâu. */
+  body.dark {
+  --ui-bg: 18 21 31; /* #12151F */
+  --ui-surface: 25 29 42; /* #191D2A */
+  --ui-surface-2: 34 39 56; /* #222738 */
+  --ui-surface-3: 43 49 69; /* #2B3145 */
+  --ui-border: 46 52 71; /* #2E3447 */
+  --ui-border-strong: 107 115 144; /* #6B7390 */
+  --ui-fg: 232 233 240; /* #E8E9F0 */
+  --ui-fg-muted: 163 168 186; /* #A3A8BA */
+  --ui-primary: 143 128 245; /* #8F80F5 */
+  --ui-primary-hover: 164 151 248; /* #A497F8 */
+  --ui-primary-fg: 18 21 31; /* #12151F */
+  --ui-primary-soft: 42 37 80; /* #2A2550 */
+  --ui-primary-soft-fg: 196 187 255; /* #C4BBFF */
+  --ui-accent: 251 191 36; /* #FBBF24 */
+  --ui-accent-soft: 58 44 16; /* #3A2C10 */
+  --ui-accent-soft-fg: 252 211 77; /* #FCD34D */
+  --ui-success: 74 222 128; /* #4ADE80 */
+  --ui-success-soft: 22 48 31; /* #16301F */
+  --ui-success-soft-fg: 134 239 172; /* #86EFAC */
+  --ui-danger: 248 113 113; /* #F87171 */
+  --ui-danger-hover: 252 165 165; /* #FCA5A5 */
+  --ui-danger-fg: 18 21 31; /* #12151F */
+  --ui-danger-soft: 58 28 30; /* #3A1C1E */
+  --ui-danger-soft-fg: 252 165 165; /* #FCA5A5 */
+  --ui-warning: 251 191 36; /* #FBBF24 */
+  --ui-warning-soft: 58 44 16; /* #3A2C10 */
+  --ui-warning-soft-fg: 252 211 77; /* #FCD34D */
+  --ui-info: 96 165 250; /* #60A5FA */
+  --ui-info-soft: 23 42 69; /* #172A45 */
+  --ui-info-soft-fg: 147 197 253; /* #93C5FD */
+  --ui-ring: 164 151 248; /* #A497F8 */
+  --ui-overlay: 5 7 12; /* #05070C */
+    --ui-shadow: 0 0 0;
+    color-scheme: dark;
+  }
+
+  /* Reset có phạm vi. :where() giữ độ ưu tiên = 0 để utility Tailwind luôn thắng. */
+  :where(.ui-scope, .ui-scope *, .ui-scope ::before, .ui-scope ::after) {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: rgb(var(--ui-border));
+  }
+  :where(.ui-scope) {
+    font-family: theme('fontFamily.sans');
+    color: rgb(var(--ui-fg));
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  :where(.ui-scope) :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, ul, ol) {
+    margin: 0;
+  }
+  :where(.ui-scope) :where(ul, ol) {
+    list-style: none;
+    padding: 0;
+  }
+  :where(.ui-scope) :where(h1, h2, h3, h4, h5, h6) {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  :where(.ui-scope) :where(button, input, select, textarea) {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+    margin: 0;
+  }
+  :where(.ui-scope) :where(button, [role='button']) {
+    cursor: pointer;
+    background-color: transparent;
+  }
+  :where(.ui-scope) :where(button:disabled, [aria-disabled='true']) {
+    cursor: not-allowed;
+  }
+  :where(.ui-scope) :where(a) {
+    color: inherit;
+    text-decoration: inherit;
+  }
+  :where(.ui-scope) :where(img, svg, video, canvas) {
+    display: block;
+    max-width: 100%;
+  }
+  :where(.ui-scope) :where(code, kbd, pre, samp) {
+    font-family: theme('fontFamily.mono');
+  }
+  :where(.ui-scope) :where(dialog) {
+    color: inherit;
+  }
+}
+
+/* Ngoài @layer: Tailwind 3 có thể lọc quy tắc trong layer nếu class/id chưa thấy trong code quét. */
+/* Người dùng xin giảm chuyển động → áp TOÀN TRANG (cả trang legacy, CSS module arena/roadmap/
+   studio chưa tự xử lý), không chỉ .ui-scope. Đặt 0.01ms chứ không `none`/0: animationend/
+   transitionend vẫn bắn nên JS legacy chờ các sự kiện đó (đóng hộp thoại, gỡ toast) không bị treo;
+   phần tử nhảy thẳng tới trạng thái cuối. Spinner vì thế đứng yên — vẫn có nhãn sr-only + vòng tĩnh
+   nên người dùng vẫn biết đang tải. Ngoại lệ hiếm (chuyển động mang nghĩa, VD thanh tiến độ chạy
+   thi đấu): thêm class `ui-motion-essential` để giữ nguyên. */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto !important;
+  }
+  *:not(.ui-motion-essential),
+  *:not(.ui-motion-essential)::before,
+  *:not(.ui-motion-essential)::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Đích của SkipLink (ui/SkipLink.tsx) có tabIndex=-1 chỉ để nhận focus bằng lập trình;
+   không vẽ viền focus quanh cả vùng nội dung — focus chỉ là điểm xuất phát cho Tab kế tiếp. */
+#main-content:focus {
+  outline: none;
+}
+
+@layer components {
+  /* Vòng focus thống nhất cho mọi phần tử tương tác (chỉ hiện khi dùng bàn phím). */
+  .ui-focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
+  }
+  /* Ẩn thanh cuộn nhưng vẫn cuộn được (thanh Tabs cuộn ngang trên mobile). */
+  .ui-no-scrollbar {
+    scrollbar-width: none;
+  }
+  .ui-no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

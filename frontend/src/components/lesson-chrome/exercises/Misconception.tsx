@@ -14,37 +14,26 @@ export interface MisconceptionProps {
 export default function Misconception({ myth, correction, exampleLabel, langTag, code }: MisconceptionProps) {
   return (
     <div>
-      <span className={shellStyles.eyebrow} style={{ background: 'var(--st-err-bg)', color: 'var(--st-err-text)' }}>
+      <span className={`${shellStyles.eyebrow} ![background:var(--st-err-bg)] ![color:var(--st-err-text)]`} >
         ⚠ Hiểu lầm phổ biến
       </span>
       <p
-        style={{
-          fontSize: 20,
-          fontWeight: 700,
-          textDecoration: 'line-through',
-          color: 'var(--edu-t3)',
-          margin: '16px 0 20px',
-        }}
+        className="![font-size:20px] ![font-weight:700] ![text-decoration:line-through] ![color:var(--edu-t3)] ![margin:16px_0_20px]"
       >
         &ldquo;{myth}&rdquo;
       </p>
       <div
-        style={{
-          background: 'var(--st-ok-bg)',
-          borderRadius: 12,
-          padding: '16px 18px',
-          marginBottom: 16,
-        }}
+        className="![background:var(--st-ok-bg)] ![border-radius:12px] ![padding:16px_18px] ![margin-bottom:16px]"
       >
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--st-ok-text)', marginBottom: 6 }}>
+        <div className="![font-size:12px] ![font-weight:700] ![color:var(--st-ok-text)] ![margin-bottom:6px]">
           ✓ THỰC TẾ CHÍNH XÁC
         </div>
-        <div style={{ fontSize: 14, color: 'var(--edu-t1)', lineHeight: 1.6 }}>{correction}</div>
+        <div className="![font-size:14px] ![color:var(--edu-t1)] ![line-height:1.6]">{correction}</div>
       </div>
       {code && (
         <>
           {exampleLabel && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--edu-t3)', marginBottom: 6 }}>
+            <div className="![display:flex] ![justify-content:space-between] ![font-size:12px] ![color:var(--edu-t3)] ![margin-bottom:6px]">
               <span>● {exampleLabel}</span>
               {langTag && <span>{langTag}</span>}
             </div>

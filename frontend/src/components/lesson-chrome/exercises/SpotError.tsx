@@ -33,13 +33,14 @@ export default function SpotError({ filename, lines, selected, onSelect, correct
           const isWrong = checked && isSelected && correctLine !== line.num;
           const showLabel = (isSelected || isRight) && line.errorLabel;
 
-          const borderColor = isRight
-            ? 'var(--st-ok-line)'
+          const borderCls = isRight
+            ? '![border-color:var(--st-ok-line)]'
             : isWrong
-              ? 'var(--st-err-line)'
+              ? '![border-color:var(--st-err-line)]'
               : isSelected
-                ? 'var(--edu-accent)'
-                : 'transparent';
+                ? '![border-color:var(--edu-accent)]'
+                : '![border-color:transparent]';
+          const bgCls = isRight ? '![background:var(--st-ok-bg)]' : isWrong ? '![background:var(--st-err-bg)]' : '![background:transparent]';
 
           return (
             <button
@@ -47,36 +48,15 @@ export default function SpotError({ filename, lines, selected, onSelect, correct
               type="button"
               onClick={() => onSelect(line.num)}
               disabled={checked}
-              className={styles.codeLine}
-              style={{
-                width: '100%',
-                background: isRight ? 'var(--st-ok-bg)' : isWrong ? 'var(--st-err-bg)' : 'transparent',
-                border: `1px solid ${borderColor}`,
-                borderRadius: 6,
-                cursor: checked ? 'default' : 'pointer',
-                textAlign: 'left',
-                font: 'inherit',
-                justifyContent: 'space-between',
-                padding: '2px 6px',
-                transition: 'background .18s, border-color .18s',
-              }}
+              className={`${styles.codeLine} ${borderCls} ${bgCls} ${checked ? '![cursor:default]' : '![cursor:pointer]'} ![width:100%] ![border-style:solid] ![border-width:1px] ![border-radius:6px] ![text-align:left] ![font:inherit] ![justify-content:space-between] ![padding:2px_6px] ![transition:background_.18s,border-color_.18s]`}
             >
-              <span style={{ display: 'flex', gap: 12 }}>
+              <span className="![display:flex] ![gap:12px]">
                 <span className={styles.lineNum}>{line.num}</span>
                 <span className={styles.codeText}>{line.content}</span>
               </span>
               {showLabel && (
                 <span
-                  style={{
-                    background: isRight ? 'var(--st-ok-bg)' : 'var(--edu-accent-soft)',
-                    color: isRight ? 'var(--st-ok-text)' : 'var(--edu-accent-text)',
-                    borderRadius: 999,
-                    padding: '2px 10px',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    flexShrink: 0,
-                    marginLeft: 12,
-                  }}
+                  className={`${isRight ? '![background:var(--st-ok-bg)]' : '![background:var(--edu-accent-soft)]'} ${isRight ? '![color:var(--st-ok-text)]' : '![color:var(--edu-accent-text)]'} ![border-radius:999px] ![padding:2px_10px] ![font-size:11px] ![font-weight:700] ![flex-shrink:0] ![margin-left:12px]`}
                 >
                   ! {line.errorLabel}
                 </span>

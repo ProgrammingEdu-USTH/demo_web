@@ -1,6 +1,7 @@
 import { INestApplication, RequestMethod } from '@nestjs/common';
 import { CorsMiddleware } from 'src/common/middleware/cors/cors.middleware';
 import { OverloadProtectionMiddleware } from 'src/common/middleware/overload-protection/overload-protection.middleware';
+import { ProxyAuthMiddleware } from 'src/common/middleware/proxy-auth/proxy-auth.middleware';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id/request-id.middleware';
 import { SecurityHeadersMiddleware } from 'src/common/middleware/security-headers/security-headers.middleware';
 
@@ -40,6 +41,13 @@ export function setupApiGateway(app: INestApplication): void {
   // Giá trị là SỐ HOP proxy, KHÔNG dùng `true`: `true` khiến Express tin toàn bộ
   // chuỗi X-Forwarded-For, kẻ tấn công chỉ cần bịa header là có IP mới mỗi
   // request và vượt qua rate-limit hoàn toàn. Chạy trực tiếp không proxy -> 0.
+  const express = app.getHttpAdapter().getInstance() as {
+    set: (k: string, v: unknown) => void;
+    disable: (k: string) => void;
+  };
+  // Không quảng cáo framework qua header X-Powered-By: Express.
+  express.disable('x-powered-by');
+
   const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? 0);
   if (trustProxyHops > 0) {
     (
@@ -55,11 +63,14 @@ export function setupApiGateway(app: INestApplication): void {
   // (kể cả preflight OPTIONS bị 404). Thứ tự: RequestId trước để mọi log phía
   // sau có request_id trong AsyncLocalStorage.
   const requestId = app.get(RequestIdMiddleware);
+  const proxyAuth = app.get(ProxyAuthMiddleware);
   const overload = app.get(OverloadProtectionMiddleware);
   const securityHeaders = app.get(SecurityHeadersMiddleware);
   const cors = app.get(CorsMiddleware);
 
   app.use(requestId.use.bind(requestId));
+  // Chặn request không đi qua proxy frontend TRƯỚC mọi xử lý khác (PROXY_SECRET).
+  app.use(proxyAuth.use.bind(proxyAuth));
   // Chối tải đặt NGAY SAU request-id (để lượt bị chối vẫn có mã request để tra
   // cứu) và TRƯỚC mọi thứ tốn kém khác — mục đích là loại bỏ request thừa với
   // chi phí nhỏ nhất có thể khi hệ thống đang quá tải.

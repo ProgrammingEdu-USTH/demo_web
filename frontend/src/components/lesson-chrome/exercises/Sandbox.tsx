@@ -22,10 +22,10 @@ export interface SandboxProps {
   consoleOutput?: ConsoleLine[];
 }
 
-const STATUS_STYLE: Record<SandboxTest['status'], { bg: string; text: string; label: string }> = {
-  pass: { bg: 'var(--st-ok-bg)', text: 'var(--st-ok-text)', label: '✓ Đạt (Pass)' },
-  fail: { bg: 'var(--st-err-bg)', text: 'var(--st-err-text)', label: '✕ Thất bại' },
-  pending: { bg: 'var(--edu-card-bg)', text: 'var(--edu-t3)', label: '• Chưa chạy' },
+const STATUS_STYLE: Record<SandboxTest['status'], { cls: string; label: string }> = {
+  pass: { cls: '![background:var(--st-ok-bg)] ![color:var(--st-ok-text)]', label: '✓ Đạt (Pass)' },
+  fail: { cls: '![background:var(--st-err-bg)] ![color:var(--st-err-text)]', label: '✕ Thất bại' },
+  pending: { cls: '![background:var(--edu-card-bg)] ![color:var(--edu-t3)]', label: '• Chưa chạy' },
 };
 
 export default function Sandbox({ filename, langTag, code, tests, consoleOutput }: SandboxProps) {
@@ -64,31 +64,21 @@ export default function Sandbox({ filename, langTag, code, tests, consoleOutput 
         placeholder='Bấm "Chạy kiểm thử" để thực thi solution.py'
       />
 
-      <div style={{ marginTop: 16, background: 'var(--edu-card-bg)', borderRadius: 12, padding: 14 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--edu-t1)', marginBottom: 10 }}>
+      <div className="![margin-top:16px] ![background:var(--edu-card-bg)] ![border-radius:12px] ![padding:14px]">
+        <div className="![font-size:13px] ![font-weight:700] ![color:var(--edu-t1)] ![margin-bottom:10px]">
           Kiểm thử &nbsp;
-          <span style={{ color: 'var(--edu-t3)', fontWeight: 500 }}>{passed}/{tests.length} test đạt</span>
+          <span className="![color:var(--edu-t3)] ![font-weight:500]">{passed}/{tests.length} test đạt</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="![display:flex] ![flex-direction:column] ![gap:8px]">
           {shown.map((t, i) => {
             const s = STATUS_STYLE[t.status];
             return (
               <div
                 key={i}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  background: 'var(--edu-panel-bg-solid)',
-                  border: '1px solid var(--edu-sidebar-border)',
-                  borderRadius: 8,
-                  padding: '8px 12px',
-                  fontSize: 13,
-                  transition: 'border-color .2s',
-                }}
+                className="![display:flex] ![align-items:center] ![justify-content:space-between] ![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:8px] ![padding:8px_12px] ![font-size:13px] ![transition:border-color_.2s]"
               >
                 <code>{t.label}</code>
-                <span className={styles.chip} style={{ background: s.bg, color: s.text, border: 0, cursor: 'default' }}>
+                <span className={`${styles.chip} ${s.cls} ![border:0] ![cursor:default]`}>
                   {s.label}
                 </span>
               </div>

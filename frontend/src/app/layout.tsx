@@ -1,6 +1,13 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 
 import { ALL_PRECEDENCES } from '@/components/PageStyles';
+import { ToastProvider } from '@/components/ui';
+import { fontVariables } from '@/components/ui/fonts';
+
+// Token + Tailwind của design system mới, nạp MỘT lần. Preflight đã tắt nên không làm vỡ trang legacy;
+// reset chỉ áp trong `.ui-scope` (xem design/SYSTEM.md §0).
+import './globals.css';
 
 // Root layout TỐI THIỂU — không import CSS global nào ở đây.
 // Mỗi page/layout con tự import ĐÚNG tổ hợp CSS của template gốc
@@ -14,11 +21,15 @@ export const metadata: Metadata = {
   },
 };
 
-const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// Backend đi qua proxy cùng origin (src/proxy.ts) — URL thật của backend chỉ
+// nằm ở biến server BACKEND_URL, không bao giờ lộ ra HTML.
+const API_ORIGIN = '/backend';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Nonce của request (src/proxy.ts): CSP chỉ cho chạy script nội tuyến mang đúng nonce này.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
-    <html lang="vi">
+    <html lang="vi" className={fontVariables}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {/* Template gốc nào cũng có meta csrf-token; course_detail.js/course_db_design.js
@@ -26,6 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="csrf-token" content="" />
         {/* Origin backend cho pe-bridge.js — phải có TRƯỚC mọi script legacy */}
         <script
+          nonce={nonce}
+          // Trình duyệt giấu giá trị nonce sau khi tải (nonce=""), React tưởng lệch khi hydrate.
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `window.__PE_API_ORIGIN=${JSON.stringify(API_ORIGIN)};`,
           }}
@@ -73,8 +87,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                  trang trắng trơn. Trang chi tiết khóa học dùng .page active sẵn
                  nên không phụ thuộc luật này. */
               '[id^="page-"].page{display:none}[id^="page-"].page.active{display:block}',
-              /* tiện ích ẩn dùng khắp nơi (dashboard.css / chatbot.css) */
-              '.hidden{display:none!important}.chatbot-hidden{display:none!important}',
+              /* tiện ích ẩn dùng khắp nơi (dashboard.css / chatbot.css).
+                 :not([class*=":"]) để phần tử Tailwind có biến thể (lg:block,
+                 sm:flex, md:flex…) không bị !important đè mất; JS legacy chỉ
+                 toggle `hidden` trên phần tử không có biến thể nên vẫn ẩn đúng. */
+              'body{margin:0}.hidden:not([class*=":"]){display:none!important}.chatbot-hidden{display:none!important}',
               /* hộp thoại: ẩn bằng opacity+visibility, mở bằng .active
                  (dashboard.css .un-overlay/.streak-overlay, ChangePassword.css .cp-overlay) */
               '.un-overlay,.cp-overlay,.streak-overlay,.edu-rq-overlay{opacity:0;visibility:hidden}',
@@ -101,6 +118,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             Phải nằm trong <body> (không phải <head>) vì cần document.body. */}
         <script
+          nonce={nonce}
+          // Trình duyệt giấu giá trị nonce sau khi tải (nonce=""), React tưởng lệch khi hydrate.
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html:
               "(function(){try{var d=localStorage.getItem('theme')==='dark';" +
@@ -108,7 +128,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "document.body.classList.toggle('light',!d);}catch(e){}})();",
           }}
         />
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

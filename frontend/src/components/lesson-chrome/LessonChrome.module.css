@@ -17,7 +17,7 @@
 }
 
 .chrome {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--lesson-shell-h, 0px));
   display: flex;
   flex-direction: column;
   color: var(--edu-t1);
@@ -28,7 +28,7 @@
 .topBar {
   height: var(--st-chrome-h);
   position: sticky;
-  top: 0;
+  top: var(--lesson-shell-h, 0px);
   z-index: 50;
   background: var(--edu-panel-bg-solid);
   flex-shrink: 0;
@@ -45,8 +45,8 @@
 }
 
 .closeBtn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   flex-shrink: 0;
   display: flex;
@@ -86,7 +86,7 @@
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 8px 0;
+  padding: 0;
 }
 .segment {
   flex: 1;
@@ -112,11 +112,29 @@
 button.segment {
   cursor: pointer;
   position: relative;
+  /* Nút cao 44px (vùng chạm thật); vạch 6px vẽ bằng ::before + thẻ fill, căn giữa. */
+  height: 44px;
+  background: transparent;
+  overflow: visible;
 }
-button.segment::after {
+button.segment::before {
   content: '';
   position: absolute;
-  inset: -7px 0;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 6px;
+  margin-top: -3px;
+  background: var(--st-track);
+  border-radius: inherit;
+}
+button.segment .segmentFill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: inherit;
 }
 /* Luôn render thẻ fill (kể cả rộng 0) để width có thể transition — nếu chỉ
    gắn/gỡ thẻ theo bước thì trình duyệt không có giá trị cũ để nội suy. */
@@ -143,6 +161,21 @@ button.segment::after {
   white-space: nowrap;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
+}
+
+.xpPill {
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 17px;
+  background: var(--edu-accent-soft);
+  color: var(--edu-accent-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .streakPill {
@@ -399,5 +432,18 @@ button.segment:focus-visible,
 @media (max-width: 560px) {
   .scorePill {
     padding: 0 10px;
+  }
+}
+
+/* Mobile: đoạn tiến độ chỉ rộng ~4px → nới vùng chạm tối thiểu 44px (vạch vẽ vẫn mảnh 6px);
+   quá nhiều đoạn thì thanh cuộn ngang thay vì ép nhỏ lại. */
+@media (max-width: 639px) {
+  .track {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  button.segment {
+    flex: 1 0 44px;
+    min-width: 44px;
   }
 }

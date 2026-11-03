@@ -10,7 +10,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { IsInt, IsString, Max, Min } from 'class-validator';
-import { CurrentUserId } from 'src/common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  CurrentUserId,
+} from 'src/common/decorators/current-user.decorator';
+import { Public } from 'src/common/decorators/public.decorators';
 import { CoursesService } from './courses.service';
 
 export class RateCourseDto {
@@ -31,11 +35,12 @@ export class CoursesController {
   @Get('courses')
   list(
     @CurrentUserId() userId: number,
+    @CurrentUser('role') role: string | undefined,
     @Query('q') q?: string,
     @Query('level') level?: string,
     @Query('language') language?: string,
   ) {
-    return this.courses.listCourses(userId, q, level, language);
+    return this.courses.listCourses(userId, q, level, language, role);
   }
 
   // ---------- Task 99 ----------
@@ -46,15 +51,22 @@ export class CoursesController {
 
   // ---------- Task 100 ----------
   @Get('courses-enrolled')
-  coursesEnrolled(@CurrentUserId() userId: number) {
-    return this.courses.getCoursesEnrolled(userId);
+  coursesEnrolled(
+    @CurrentUserId() userId: number,
+    @CurrentUser('role') role: string | undefined,
+  ) {
+    return this.courses.getCoursesEnrolled(userId, role);
   }
 
   // ---------- Task 101 ----------
   @Post('courses/:id/enroll')
   @HttpCode(HttpStatus.OK)
-  enroll(@CurrentUserId() userId: number, @Param('id') courseId: string) {
-    return this.courses.enroll(userId, courseId);
+  enroll(
+    @CurrentUserId() userId: number,
+    @CurrentUser('role') role: string | undefined,
+    @Param('id') courseId: string,
+  ) {
+    return this.courses.enroll(userId, courseId, role);
   }
 
   // ---------- Task 102 ----------
@@ -81,5 +93,31 @@ export class CoursesController {
   @Get('skills')
   skills(@CurrentUserId() userId: number) {
     return this.courses.getSkills(userId);
+  }
+}
+
+/**
+ * Danh mục khoá học công khai cho trang chủ khách. @Public() vì JwtAuthGuard là
+ * APP_GUARD toàn cục; throttler IP vẫn áp dụng để chống cào.
+ */
+@Controller('public/courses')
+@Public()
+export class PublicCoursesController {
+  constructor(private readonly courses: CoursesService) {}
+
+  @Get()
+  list() {
+    return this.courses.listPublicCourses();
+  }
+}
+
+/** Dữ liệu riêng của người dùng đang đăng nhập (JWT guard toàn cục). */
+@Controller('me')
+export class MeController {
+  constructor(private readonly courses: CoursesService) {}
+
+  @Get('resume')
+  resume(@CurrentUserId() userId: number) {
+    return this.courses.getResume(userId);
   }
 }

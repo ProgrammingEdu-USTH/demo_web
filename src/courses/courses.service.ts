@@ -42,6 +42,28 @@ const COURSE_ICONS: Record<string, string> = {
  */
 export const STUDIO_COURSES = ['python', 'python_advanced'];
 
+/**
+ * Khoá chưa công khai (is_published = false) chỉ hiện với admin và người đã
+ * ghi danh từ trước — người khác không thấy trong danh sách, không ghi danh được.
+ */
+function canSee(
+  course: { id: string; isPublished: boolean },
+  enrolledIds: Set<string>,
+  role?: string,
+): boolean {
+  return course.isPublished || role === 'admin' || enrolledIds.has(course.id);
+}
+
+/** Trang bài học của từng khoá (khớp LESSON_URLS ở frontend/src/lib/curricula.json). */
+const LESSON_URLS: Record<string, string> = {
+  python: '/lesson/python',
+  python_advanced: '/lesson/python_advanced',
+  java: '/lesson/java',
+  htmlcss: '/lesson/htmlcss',
+  cpp: '/interface',
+  db_design: '/lesson/db_design',
+};
+
 /** DB lưu enum tiếng Anh; card trên dashboard cần nhãn tiếng Việt. */
 const LEVEL_LABELS: Record<string, string> = {
   beginner: 'Cơ bản',
@@ -70,6 +92,7 @@ export class CoursesService {
     q?: string,
     level?: string,
     language?: string,
+    role?: string,
   ) {
     const where: Prisma.CourseWhereInput = {};
     const and: Prisma.CourseWhereInput[] = [];
@@ -114,7 +137,7 @@ export class CoursesService {
     }
     if (and.length) where.AND = and;
 
-    const [courses, enrollments] = await Promise.all([
+    const [rawCourses, enrollments] = await Promise.all([
       this.prisma.course.findMany({ where, orderBy: { id: 'asc' } }),
       this.prisma.enrollment.findMany({
         where: { userId },
@@ -123,10 +146,45 @@ export class CoursesService {
     ]);
 
     const enrolledIds = new Set(enrollments.map((e) => e.courseId));
+    const courses = rawCourses.filter((c) => canSee(c, enrolledIds, role));
 
     return {
       ok: true,
       courses: courses.map((c) => this.mapCourse(c, enrolledIds.has(c.id))),
+    };
+  }
+
+  /**
+   * Danh mục khoá học công khai cho trang chủ KHÁCH (chưa đăng nhập).
+   * Chỉ khoá is_published = true và chỉ các trường danh mục: tuyệt đối không có
+   * `enrolled`, tiến độ hay dữ liệu người dùng. Tách khỏi listCourses() để không
+   * đổi hành vi /api/courses mà bản Django dùng chung DB vẫn dựa vào.
+   */
+  async listPublicCourses() {
+    const rows = await this.prisma.course.findMany({
+      where: { isPublished: true },
+      orderBy: { id: 'asc' },
+    });
+    return {
+      ok: true,
+      courses: rows.map((c) => {
+        const m = this.mapCourse(c, false);
+        return {
+          id: m.id,
+          title: m.title,
+          subtitle: m.subtitle,
+          description: m.description,
+          level: m.level,
+          language: m.language,
+          tag: m.tag,
+          icon: m.icon,
+          image: m.image,
+          color: m.color,
+          duration: m.duration,
+          rating: m.rating,
+          totalLessons: m.totalLessons,
+        };
+      }),
     };
   }
 
@@ -174,8 +232,75 @@ export class CoursesService {
     };
   }
 
+  /**
+   * "Tiếp tục học" cho dashboard: mỗi khoá đã đăng ký còn bài chưa xong -> bài kế
+   * tiếp, sắp theo lần học gần nhất (completedAt lớn nhất; chưa học bài nào thì
+   * dùng ngày đăng ký). Không thêm bảng/cột: dữ liệu đã có sẵn.
+   */
+  async getResume(userId: number) {
+    const rows = await this.prisma.enrollment.findMany({
+      where: { userId },
+      include: { course: true },
+    });
+    if (!rows.length) return [];
+
+    const ids = rows.map((r) => r.courseId);
+    const progress = await this.prisma.lessonProgress.findMany({
+      where: { userId, courseId: { in: ids } },
+      select: {
+        courseId: true,
+        completedAt: true,
+        status: true,
+        lesson: { select: { sortOrder: true } },
+      },
+    });
+
+    const items = rows.flatMap((r) => {
+      const mine = progress.filter((p) => p.courseId === r.courseId);
+      // Khoá Studio theo số thứ tự bài đã xong; khoá khác theo completedLessons.
+      const doneNos = new Set(
+        mine
+          .filter((p) => p.status === 'completed')
+          .map((p) => p.lesson.sortOrder),
+      );
+      let next = r.completedLessons + 1;
+      if (STUDIO_COURSES.includes(r.courseId)) {
+        next = 1;
+        while (doneNos.has(next)) next++;
+      }
+      if (next > r.course.lessonCount) return [];
+      const last = mine.reduce<Date>(
+        (m, p) => (p.completedAt > m ? p.completedAt : m),
+        r.enrolledAt,
+      );
+      return [{ r, next, last }];
+    });
+    if (!items.length) return [];
+
+    const lessons = await this.prisma.lesson.findMany({
+      where: {
+        OR: items.map((i) => ({ courseId: i.r.courseId, sortOrder: i.next })),
+      },
+      select: { courseId: true, sortOrder: true, title: true },
+    });
+    const titleOf = new Map(
+      lessons.map((l) => [`${l.courseId}:${l.sortOrder}`, l.title]),
+    );
+
+    return items
+      .sort((a, b) => b.last.getTime() - a.last.getTime())
+      .map(({ r, next }) => ({
+        courseId: r.courseId,
+        courseName: r.course.title,
+        lessonNo: next,
+        lessonTitle: titleOf.get(`${r.courseId}:${next}`) ?? `Bài ${next}`,
+        lessonUrl: `${LESSON_URLS[r.courseId] ?? `/lesson/${r.courseId}`}?lesson=${next}`,
+        percent: r.progress,
+      }));
+  }
+
   // ---------- Task 90 ----------
-  async getCoursesEnrolled(userId: number) {
+  async getCoursesEnrolled(userId: number, role?: string) {
     const [courses, rows] = await Promise.all([
       this.prisma.course.findMany({ orderBy: { id: 'asc' } }),
       this.prisma.enrollment.findMany({
@@ -189,17 +314,28 @@ export class CoursesService {
     const titles = await this.fetchLessonTitles(rows);
     return {
       ok: true,
-      courses: courses.map((c) => this.mapCourse(c, enrolledIds.has(c.id))),
+      courses: courses
+        .filter((c) => canSee(c, enrolledIds, role))
+        .map((c) => this.mapCourse(c, enrolledIds.has(c.id))),
       enrolled: rows.map((r) => this.mapEnrollment(r, titles)),
     };
   }
 
   // ---------- Task 91-92 ----------
-  async enroll(userId: number, courseId: string) {
+  async enroll(userId: number, courseId: string, role?: string) {
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
     });
     if (!course) throw new NotFoundException('Không tìm thấy khoá học');
+    // Khoá chưa công khai: chỉ admin (xem trước) và người đã ghi danh từ trước.
+    // Cùng thông báo như khoá không tồn tại — không xác nhận là khoá có thật.
+    if (!course.isPublished && role !== 'admin') {
+      const already = await this.prisma.enrollment.findUnique({
+        where: { userId_courseId: { userId, courseId } },
+        select: { userId: true },
+      });
+      if (!already) throw new NotFoundException('Không tìm thấy khoá học');
+    }
 
     return this.prisma.$transaction(async (tx) => {
       // Bước 1: ON CONFLICT DO NOTHING — re-enroll không ghi đè dữ liệu cũ.

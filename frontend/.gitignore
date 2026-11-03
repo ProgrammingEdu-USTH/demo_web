@@ -43,3 +43,6 @@ next-env.d.ts
 # Playwright
 /test-results
 /playwright-report
+
+# Thư viện tự host, sinh bởi scripts/vendor-assets.mjs (predev/prebuild)
+/public/static/vendor

@@ -19,36 +19,27 @@ export interface ClassifyProps {
   onDrop: (binKey: string) => void;
 }
 
+// Số cột theo số mục: viết nguyên văn để Tailwind quét được class.
+const COLS_CLS = ['grid-cols-1', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6'];
+
 export default function Classify({ bins, pool, heldToken, onHold, onDrop }: ClassifyProps) {
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${bins.length}, 1fr)`, gap: 12, marginBottom: 16 }}>
+      <div className={`grid ${COLS_CLS[Math.min(bins.length, COLS_CLS.length - 1)]} ![gap:12px] ![margin-bottom:16px]`}>
         {bins.map((bin) => (
           <button
             key={bin.key}
             type="button"
             onClick={() => heldToken && onDrop(bin.key)}
-            style={{
-              textAlign: 'left',
-              font: 'inherit',
-              cursor: heldToken ? 'pointer' : 'default',
-              background: 'var(--edu-card-bg)',
-              border: heldToken ? '1.5px dashed var(--st-slot-border)' : '1px solid var(--edu-sidebar-border)',
-              borderRadius: 14,
-              padding: 14,
-              minHeight: 140,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 6,
-            }}
+            className={`![text-align:left] ![font:inherit] ${heldToken ? '![cursor:pointer]' : '![cursor:default]'} ![background:var(--edu-card-bg)] ${heldToken ? '![border:1.5px_dashed_var(--st-slot-border)]' : '![border:1px_solid_var(--edu-sidebar-border)]'} ![border-radius:14px] ![padding:14px] ![min-height:140px] ![display:flex] ![flex-direction:column] ![gap:6px]`}
           >
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--edu-t1)' }}>
+            <div className="![font-size:12px] ![font-weight:700] ![color:var(--edu-t1)]">
               <code>{bin.label}</code>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--edu-t3)' }}>{bin.sub}</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+            <div className="![font-size:11px] ![color:var(--edu-t3)]">{bin.sub}</div>
+            <div className="![display:flex] ![gap:6px] ![flex-wrap:wrap] ![margin-top:6px]">
               {bin.items.map((item) => (
-                <span key={item} className={styles.chip} style={{ cursor: 'default' }}>
+                <span key={item} className={`${styles.chip} ![cursor:default]`} >
                   {item} ✓
                 </span>
               ))}
@@ -57,17 +48,13 @@ export default function Classify({ bins, pool, heldToken, onHold, onDrop }: Clas
         ))}
       </div>
       <div
-        style={{
-          background: 'var(--edu-card-bg)',
-          borderRadius: 12,
-          padding: '12px 16px',
-        }}
+        className="![background:var(--edu-card-bg)] ![border-radius:12px] ![padding:12px_16px]"
       >
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--edu-t2)', marginBottom: 8 }}>
+        <div className="![font-size:12px] ![font-weight:700] ![color:var(--edu-t2)] ![margin-bottom:8px]">
           KHO TOKEN {heldToken ? `— đang cầm "${heldToken}", bấm vào nhóm để thả` : '(bấm để cầm lên)'}
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {pool.length === 0 && <span style={{ fontSize: 12, color: 'var(--edu-t3)' }}>Đã phân loại hết.</span>}
+        <div className="![display:flex] ![gap:8px] ![flex-wrap:wrap]">
+          {pool.length === 0 && <span className="![font-size:12px] ![color:var(--edu-t3)]">Đã phân loại hết.</span>}
           {pool.map((token) => (
             <button
               key={token}

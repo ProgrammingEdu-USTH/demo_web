@@ -20,19 +20,14 @@ export interface HintSheetProps {
 export default function HintSheet({ levels, openIndex, onUnlock, onBackToCode, onContinueWriting }: HintSheetProps) {
   return (
     <div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="![display:flex] ![flex-direction:column] ![gap:10px]">
         {levels.map((level, i) => {
           const isOpen = i === openIndex;
           const locked = level.locked && i > openIndex;
           return (
             <div
               key={i}
-              style={{
-                background: 'var(--edu-panel-bg-solid)',
-                border: '1px solid var(--edu-sidebar-border)',
-                borderRadius: 12,
-                padding: '14px 16px',
-              }}
+              className="![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:12px] ![padding:14px_16px]"
             >
               {/* Trước đây chỉ mở khoá được khi có `cost`; bài học thật không
                   trừ XP nên không truyền cost, và học viên kẹt ở tầng 1. */}
@@ -40,64 +35,34 @@ export default function HintSheet({ levels, openIndex, onUnlock, onBackToCode, o
                 type="button"
                 onClick={() => locked && onUnlock(i)}
                 disabled={!locked}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  background: 'transparent',
-                  border: 0,
-                  font: 'inherit',
-                  cursor: locked ? 'pointer' : 'default',
-                  color: 'var(--edu-t1)',
-                  fontWeight: 700,
-                  fontSize: 13,
-                }}
+                className={`![width:100%] ![display:flex] ![justify-content:space-between] ![align-items:center] ![background:transparent] ![border:0] ![font:inherit] ${locked ? '![cursor:pointer]' : '![cursor:default]'} ![color:var(--edu-t1)] ![font-weight:700] ![font-size:13px]`}
               >
                 <span>{locked ? '🔒' : '💡'} {level.title}</span>
                 {locked && (
-                  <span style={{ background: 'var(--edu-accent-soft)', color: 'var(--edu-accent-text)', borderRadius: 999, padding: '3px 10px', fontSize: 11 }}>
+                  <span className="![background:var(--edu-accent-soft)] ![color:var(--edu-accent-text)] ![border-radius:999px] ![padding:3px_10px] ![font-size:11px]">
                     {level.cost != null ? `⚡ Mở khoá (-${level.cost} XP)` : 'Mở gợi ý này'}
                   </span>
                 )}
               </button>
               {isOpen && level.body && (
-                <div style={{ fontSize: 13, color: 'var(--edu-t2)', lineHeight: 1.7, marginTop: 10 }}>{level.body}</div>
+                <div className="![font-size:13px] ![color:var(--edu-t2)] ![line-height:1.7] ![margin-top:10px]">{level.body}</div>
               )}
             </div>
           );
         })}
       </div>
-      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+      <div className="![display:flex] ![gap:10px] ![margin-top:16px]">
         <button
           type="button"
           onClick={onBackToCode}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            borderRadius: 999,
-            border: '1px solid var(--edu-sidebar-border)',
-            background: 'var(--edu-card-bg)',
-            color: 'var(--edu-t1)',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className="![flex:1] ![padding:12px_16px] ![border-radius:999px] ![border:1px_solid_var(--edu-sidebar-border)] ![background:var(--edu-card-bg)] ![color:var(--edu-t1)] ![font-weight:600] ![cursor:pointer]"
         >
           ✓ Đã hiểu, quay lại làm bài
         </button>
         <button
           type="button"
           onClick={onContinueWriting}
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            borderRadius: 999,
-            border: 0,
-            background: 'transparent',
-            color: 'var(--edu-accent-text)',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className="![flex:1] ![padding:12px_16px] ![border-radius:999px] ![border:0] ![background:transparent] ![color:var(--edu-accent-text)] ![font-weight:600] ![cursor:pointer]"
         >
           Tiếp tục viết mã
         </button>

@@ -6,7 +6,7 @@
  * mount <LegacyScripts> sau khi data đã fetch xong (component return null khi
  * chưa có data) → gà-và-trứng: fetch đầu tiên đập vào Next :3000 và 404.
  *
- * apiFetch trỏ thẳng NEXT_PUBLIC_API_URL + đính "Authorization: Bearer" từ
+ * apiFetch trỏ tới proxy /backend (src/proxy.ts) + đính "Authorization: Bearer" từ
  * localStorage (cùng key pe_access với pe-bridge.js) + thử refresh token đúng
  * 1 lần khi 401 — mirror tối thiểu logic của bridge. Refresh token nằm trong
  * cookie httpOnly do backend đặt; pe_refresh trong localStorage chỉ còn là key
@@ -18,7 +18,8 @@ const LS_LEGACY_REFRESH = 'pe_refresh';
 
 function origin(): string {
   const w = window as unknown as { __PE_API_ORIGIN?: string };
-  return w.__PE_API_ORIGIN || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  // Backend luôn đi qua proxy cùng origin /backend (src/proxy.ts).
+  return w.__PE_API_ORIGIN || '/backend';
 }
 
 function ls(key: string): string | null {

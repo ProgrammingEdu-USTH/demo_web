@@ -69,8 +69,14 @@ model User {
   postReactions       PostReaction[]
   commentReactions    CommentReaction[]
   userAchievements    UserAchievement[]
-  following           UserFollow[] @relation("UserFollowers")
-  followers           UserFollow[] @relation("UserFollowing")
+  following           UserFollow[]         @relation("UserFollowers")
+  followers           UserFollow[]         @relation("UserFollowing")
+  arenaHosted         ArenaMatch[]         @relation("ArenaHost")
+  arenaJoined         ArenaMatch[]         @relation("ArenaGuest")
+  arenaWon            ArenaMatch[]         @relation("ArenaWinner")
+  arenaSubmissions    ArenaSubmission[]
+  arenaRating         ArenaRating?
+  playgroundSnippets  PlaygroundSnippet[]
 
   @@map("users")
 }
@@ -360,17 +366,17 @@ model NotificationSetting {
 }
 
 model Notification {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
-  type      String?
-  title     String?
-  body      String?
-  refType   String?  @map("ref_type")
-  refId     Int      @map("ref_id")
-  isRead    Boolean  @default(false) @map("is_read")
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  type          String?
+  title         String?
+  body          String?
+  refType       String?  @map("ref_type")
+  refId         Int      @map("ref_id")
+  isRead        Boolean  @default(false) @map("is_read")
   // Task 199-201: gộp thông báo cùng (type, ref_type, ref_id) chưa đọc trong 10 phút.
-  coalesceCount Int  @default(1) @map("coalesce_count")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  coalesceCount Int      @default(1) @map("coalesce_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id])
 
@@ -477,4 +483,110 @@ model UserFollow {
 
   @@id([followerId, followeeId])
   @@map("user_follows")
+}
+
+enum ArenaMatchStatus {
+  waiting
+  active
+  finished
+  cancelled
+
+  @@map("arena_match_status")
+}
+
+enum ArenaEndReason {
+  solved
+  timeout
+  forfeit
+
+  @@map("arena_end_reason")
+}
+
+enum ArenaSubmissionStatus {
+  graded
+  rejected
+  error
+
+  @@map("arena_submission_status")
+}
+
+model ArenaMatch {
+  id               Int              @id @default(autoincrement())
+  code             String           @unique @db.VarChar(8)
+  isPublic         Boolean          @default(false) @map("is_public")
+  status           ArenaMatchStatus @default(waiting)
+  problemId        String           @map("problem_id") @db.VarChar(64)
+  hostId           Int              @map("host_id")
+  guestId          Int?             @map("guest_id")
+  winnerId         Int?             @map("winner_id")
+  endReason        ArenaEndReason?  @map("end_reason")
+  hostRatingDelta  Int?             @map("host_rating_delta")
+  guestRatingDelta Int?             @map("guest_rating_delta")
+  hostXp           Int?             @map("host_xp")
+  guestXp          Int?             @map("guest_xp")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  startedAt        DateTime?        @map("started_at") @db.Timestamptz(6)
+  deadlineAt       DateTime?        @map("deadline_at") @db.Timestamptz(6)
+  finishedAt       DateTime?        @map("finished_at") @db.Timestamptz(6)
+
+  host        User              @relation("ArenaHost", fields: [hostId], references: [id])
+  guest       User?             @relation("ArenaGuest", fields: [guestId], references: [id])
+  winner      User?             @relation("ArenaWinner", fields: [winnerId], references: [id])
+  submissions ArenaSubmission[]
+
+  @@index([status, isPublic, createdAt])
+  @@index([hostId, status])
+  @@index([guestId, status])
+  @@map("arena_matches")
+}
+
+model ArenaSubmission {
+  id        Int                   @id @default(autoincrement())
+  matchId   Int                   @map("match_id")
+  userId    Int                   @map("user_id")
+  code      String                @db.Text
+  status    ArenaSubmissionStatus
+  passed    Int                   @default(0)
+  total     Int                   @default(0)
+  // { "public": [{ "index": 0, "passed": true, "got": "...", "error": "..." }], "hiddenPassed": 3, "hiddenTotal": 5 }
+  // KHÔNG chứa đầu vào/đầu ra mong đợi của test ẩn.
+  detail    Json?
+  message   String?               @db.VarChar(300)
+  createdAt DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  gradedAt  DateTime?             @map("graded_at") @db.Timestamptz(6)
+
+  match ArenaMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id])
+
+  @@index([matchId, userId, createdAt])
+  @@map("arena_submissions")
+}
+
+model ArenaRating {
+  userId    Int      @id @map("user_id")
+  rating    Int      @default(1000)
+  wins      Int      @default(0)
+  losses    Int      @default(0)
+  draws     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([rating(sort: Desc)])
+  @@map("arena_ratings")
+}
+
+model PlaygroundSnippet {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String   @db.VarChar(120)
+  language  String   @db.VarChar(16)
+  code      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("playground_snippets")
 }

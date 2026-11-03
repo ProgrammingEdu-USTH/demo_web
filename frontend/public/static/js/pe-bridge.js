@@ -5,8 +5,9 @@
  * đã được bridge này thay, chuỗi hoạt động đúng thứ tự).
  *
  * Nhiệm vụ:
- * 1. Rewrite URL tương đối /api/* và /auth/* sang origin backend (NEXT_PUBLIC_API_URL
- *    được layout bơm vào window.__PE_API_ORIGIN trước khi file này chạy).
+ * 1. Rewrite URL tương đối /api/* và /auth/* sang proxy backend /backend (layout
+ *    bơm vào window.__PE_API_ORIGIN trước khi file này chạy; src/proxy.ts chuyển
+ *    tiếp sang backend thật).
  * 2. Đính "Authorization: Bearer <access>" vào mọi request tới backend.
  * 3. Tự BẮT access/refresh token từ response /auth/login và /auth/register
  *    (main.js không phải sửa gì — nó chỉ đọc {ok, name, needs_questionnaire}).
@@ -15,6 +16,10 @@
  * 5. Vá DOMContentLoaded: script legacy được nạp SAU khi DOM sẵn sàng (React
  *    mount xong) nên listener DOMContentLoaded đăng ký muộn sẽ không bao giờ
  *    chạy — bridge gọi ngay handler khi readyState đã qua 'loading'.
+ * 6. CSP shim: CSP của trang (src/proxy.ts) không còn 'unsafe-inline', nên mọi
+ *    handler nội tuyến onclick="…" trong HTML do JS legacy sinh ra bị trình
+ *    duyệt chặn. Shim gỡ các thuộc tính on* ngay khi phần tử vào DOM và tự xử
+ *    lý sự kiện — xem khối "CSP shim" ở cuối file.
  */
 (function () {
   'use strict';
@@ -173,4 +178,198 @@
     }
     return _addEventListener(type, handler, options);
   };
+
+  // ── CSP shim: handler nội tuyến onclick="…" của HTML do JS legacy sinh ra ──
+  //
+  // CSP không có 'unsafe-inline' nên trình duyệt từ chối chạy thuộc tính on*.
+  // Thay vì sửa ~90 chỗ rải trong các file legacy, shim:
+  //   1. gỡ thuộc tính on* ngay khi phần tử vào DOM (MutationObserver), cất
+  //      mã vào data-pe-on<sự kiện>;
+  //   2. nghe sự kiện ở document và chạy mã đó bằng một bộ thông dịch NHỎ —
+  //      KHÔNG eval. Chỉ hiểu đúng các dạng có trong code legacy:
+  //        fn(args) | window.fn(args) | X && X(args) | event.stopPropagation()
+  //        event.preventDefault() | return false | (window.)location(.href) = '…'
+  //        if (event.key === 'Enter' && !event.shiftKey) { … }
+  //      với args là chuỗi, số, true/false/null, this, this.value, event.
+  //   3. Chỉ gọi hàm trong CALLABLE và chỉ chuyển trang trong cùng origin — nếu
+  //      HTML có bị chèn mã độc, shim cũng không thành cửa vượt CSP để chạy mã
+  //      tuỳ ý.
+  var CALLABLE = {
+    goLesson: 1, enroll: 1, unenroll: 1, navigate: 1, peGo: 1, readBellItem: 1,
+    skSetFilter: 1, skSkillToggle: 1, skSetToggle: 1, toggleFollow: 1,
+    forumRenderPosts: 1, forumSetReaction: 1, forumToggleComments: 1, forumSetCmtSort: 1,
+    forumAddComment: 1, forumSetCmtReaction: 1, forumSetReplyReaction: 1, forumToggleReply: 1,
+    forumAddReply: 1, forumOpenPost: 1,
+    goToStep: 1, checkFlagshipMatch: 1, resetFlagshipMatch: 1, checkFlagshipSplit: 1,
+    resetFlagshipSplit: 1, showFlagshipSplitHint: 1, checkFlagshipBugSpot: 1,
+    resetFlagshipBugSpot: 1, showFlagshipBugSpotHint: 1, checkFlagshipJoin: 1, resetFlagshipJoin: 1,
+    chooseSearchSuggestion: 1, toggleSearchLevel: 1, cshPick: 1, removeCourseFilter: 1,
+    loadCoursesAndEnrolled: 1, editCourse: 1, delCourse: 1, editLesson: 1, delLesson: 1,
+    setAnswer: 1, submitReviewQuiz: 1,
+    roadmapSelectTab: 1, roadmapOpenBrowse: 1, roadmapOpenDrawer: 1, roadmapSetStatus: 1,
+    roadmapGoTo: 1, roadmapTogglePin: 1,
+    reload: 1 // location.reload()
+  };
+  var EVENTS = ['click', 'change', 'input', 'keydown', 'keyup', 'submit', 'mouseover', 'mouseout', 'focus', 'blur', 'load', 'error'];
+  var NO_BUBBLE = { focus: 1, blur: 1, load: 1, error: 1 };
+  var warned = {};
+
+  function warnOnce(code, why) {
+    if (warned[code]) return;
+    warned[code] = 1;
+    console.warn('[CSP shim] bỏ qua handler nội tuyến (' + why + '): ' + code);
+  }
+
+  /** Tách theo `sep` ở cấp ngoài cùng (bỏ qua bên trong chuỗi và ngoặc). */
+  function splitTop(src, sep) {
+    var out = [], depth = 0, quote = null, start = 0;
+    for (var i = 0; i < src.length; i++) {
+      var ch = src[i];
+      if (quote) {
+        if (ch === '\\') i++;
+        else if (ch === quote) quote = null;
+        continue;
+      }
+      if (ch === "'" || ch === '"' || ch === '`') quote = ch;
+      else if (ch === '(' || ch === '{' || ch === '[') depth++;
+      else if (ch === ')' || ch === '}' || ch === ']') depth--;
+      else if (depth === 0 && src.substr(i, sep.length) === sep) {
+        out.push(src.slice(start, i));
+        start = i + sep.length;
+        i += sep.length - 1;
+      }
+    }
+    out.push(src.slice(start));
+    return out.map(function (s) { return s.trim(); }).filter(function (s) { return s !== ''; });
+  }
+
+  function literal(tok, el, ev) {
+    var m = /^(['"])([\s\S]*)\1$/.exec(tok);
+    if (m) return m[2].replace(/\\(.)/g, function (_, c) { return c === 'n' ? '\n' : c; });
+    if (/^-?\d+(\.\d+)?$/.test(tok)) return Number(tok);
+    if (tok === 'true') return true;
+    if (tok === 'false') return false;
+    if (tok === 'null') return null;
+    if (tok === 'this') return el;
+    if (tok === 'this.value') return el.value;
+    if (tok === 'this.checked') return el.checked;
+    if (tok === 'event') return ev;
+    throw new Error('đối số không hỗ trợ: ' + tok);
+  }
+
+  /** "window.a.b" → { ctx, fn } trên window; null nếu không có. */
+  function resolve(path) {
+    var parts = path.split('.');
+    if (parts[0] === 'window') parts.shift();
+    var ctx = window, cur = window;
+    for (var i = 0; i < parts.length; i++) {
+      if (cur == null) return null;
+      ctx = cur;
+      cur = cur[parts[i]];
+    }
+    return { ctx: ctx, fn: cur, name: parts[parts.length - 1] };
+  }
+
+  function safeNavigate(url) {
+    var target = new URL(url, window.location.href);
+    if (target.origin !== window.location.origin) throw new Error('chuyển trang ra ngoài origin');
+    window.location.href = target.href;
+  }
+
+  /** Chạy một câu lệnh; trả 'stop' nếu handler gọi stopPropagation. */
+  function runStatement(stmt, el, ev) {
+    var m;
+    if (/^return\s+false$/.test(stmt)) { ev.preventDefault(); return; }
+    if (stmt === 'event.preventDefault()') { ev.preventDefault(); return; }
+    if (stmt === 'event.stopPropagation()') { ev.stopPropagation(); return 'stop'; }
+    if ((m = /^if\s*\(([\s\S]*?)\)\s*\{([\s\S]*)\}$/.exec(stmt))) {
+      var ok = splitTop(m[1], '&&').every(function (term) {
+        var t;
+        if ((t = /^(!?)event\.(\w+)$/.exec(term))) return t[1] ? !ev[t[2]] : !!ev[t[2]];
+        if ((t = /^event\.(\w+)\s*===?\s*(.+)$/.exec(term))) return ev[t[1]] === literal(t[2], el, ev);
+        throw new Error('điều kiện không hỗ trợ: ' + term);
+      });
+      return ok ? runCode(m[2], el, ev) : undefined;
+    }
+    if ((m = /^(?:window\.)?location(?:\.href)?\s*=\s*([\s\S]+)$/.exec(stmt))) {
+      safeNavigate(literal(m[1].trim(), el, ev));
+      return;
+    }
+    if ((m = /^([\w$.]+)\s*&&\s*([\s\S]+)$/.exec(stmt))) {
+      var guard = resolve(m[1]);
+      return guard && guard.fn ? runStatement(m[2].trim(), el, ev) : undefined;
+    }
+    if ((m = /^([\w$.]+)\s*\(([\s\S]*)\)$/.exec(stmt))) {
+      var target = resolve(m[1]);
+      if (!target || typeof target.fn !== 'function') throw new Error('không có hàm ' + m[1]);
+      if (!CALLABLE[target.name]) throw new Error('hàm ngoài danh sách cho phép: ' + m[1]);
+      var args = splitTop(m[2], ',').map(function (a) { return literal(a, el, ev); });
+      target.fn.apply(target.ctx, args);
+      return;
+    }
+    throw new Error('câu lệnh không hỗ trợ');
+  }
+
+  function runCode(code, el, ev) {
+    var stmts = splitTop(code, ';');
+    var stopped;
+    for (var i = 0; i < stmts.length; i++) {
+      if (runStatement(stmts[i], el, ev) === 'stop') stopped = 'stop';
+    }
+    return stopped;
+  }
+
+  function adopt(el) {
+    for (var i = 0; i < EVENTS.length; i++) {
+      var attr = 'on' + EVENTS[i];
+      if (el.hasAttribute && el.hasAttribute(attr)) {
+        el.setAttribute('data-pe-' + attr, el.getAttribute(attr));
+        el.removeAttribute(attr);
+      }
+    }
+  }
+
+  var SELECTOR = EVENTS.map(function (e) { return '[on' + e + ']'; }).join(',');
+  function adoptTree(root) {
+    if (root.nodeType !== 1) return;
+    adopt(root);
+    var found = root.querySelectorAll(SELECTOR);
+    for (var i = 0; i < found.length; i++) adopt(found[i]);
+  }
+
+  new MutationObserver(function (records) {
+    for (var i = 0; i < records.length; i++) {
+      var r = records[i];
+      if (r.type === 'attributes') adopt(r.target);
+      else for (var j = 0; j < r.addedNodes.length; j++) adoptTree(r.addedNodes[j]);
+    }
+  }).observe(document.documentElement, {
+    subtree: true, childList: true, attributes: true,
+    attributeFilter: EVENTS.map(function (e) { return 'on' + e; })
+  });
+  adoptTree(document.documentElement);
+
+  EVENTS.forEach(function (type) {
+    var key = 'data-pe-on' + type;
+    _addEventListener(type, function (ev) {
+      // Mô phỏng bubbling của handler nội tuyến: từ phần tử đích đi lên, mỗi
+      // phần tử có handler chạy một lần; stopPropagation() dừng các tầng trên.
+      var el = ev.target;
+      if (NO_BUBBLE[type]) {
+        if (el && el.getAttribute && el.getAttribute(key) != null) {
+          try { runCode(el.getAttribute(key), el, ev); } catch (e) { warnOnce(el.getAttribute(key), e.message); }
+        }
+        return;
+      }
+      for (; el && el !== document; el = el.parentNode) {
+        var code = el.getAttribute && el.getAttribute(key);
+        if (code == null) continue;
+        try {
+          if (runCode(code, el, ev) === 'stop') break;
+        } catch (e) {
+          warnOnce(code, e.message);
+        }
+      }
+    }, !!NO_BUBBLE[type]);
+  });
 })();

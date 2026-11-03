@@ -15,6 +15,7 @@ import { ThrottlerStorageModule } from 'src/common/guards/throttler/throttler-st
 import { RequestLoggerInterceptor } from 'src/common/interceptors/request-logger/request-logger.interceptor';
 import { CorsMiddleware } from 'src/common/middleware/cors/cors.middleware';
 import { OverloadProtectionMiddleware } from 'src/common/middleware/overload-protection/overload-protection.middleware';
+import { ProxyAuthMiddleware } from 'src/common/middleware/proxy-auth/proxy-auth.middleware';
 import { RequestIdMiddleware } from 'src/common/middleware/request-id/request-id.middleware';
 import { SecurityHeadersMiddleware } from 'src/common/middleware/security-headers/security-headers.middleware';
 
@@ -73,6 +74,7 @@ import { SecurityHeadersMiddleware } from 'src/common/middleware/security-header
     // middleware thành '/api/*', làm /auth/* và /health MẤT CORS/RequestId).
     // Khai ở providers để DI khởi tạo (cần ConfigService) rồi setup lấy ra.
     RequestIdMiddleware,
+    ProxyAuthMiddleware,
     OverloadProtectionMiddleware,
     SecurityHeadersMiddleware,
     CorsMiddleware,

@@ -325,7 +325,7 @@ export default function PythonStudio() {
     <div className={s.studio}>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        href="/static/vendor/fonts/fonts.css"
       />
       <header className={s.header}>
         <div className={s.headerInner}>
@@ -349,11 +349,10 @@ export default function PythonStudio() {
               <Icon step={d.step} n={headerIcons[2]} /> {user?.xp ?? '—'} XP
             </span>
             <button
-              className={s.iconButton}
+              className={`${s.iconButton} aria-pressed:bg-primary-soft aria-pressed:text-primary-soft-fg`}
               aria-label="Đánh dấu bài học"
               aria-pressed={d.bookmark}
               onClick={() => update({ bookmark: !d.bookmark })}
-              style={{ background: d.bookmark ? '#eef2ff' : undefined }}
             >
               <Icon step={d.step} n={headerIcons[3]} />
             </button>
@@ -367,7 +366,7 @@ export default function PythonStudio() {
           </div>
         </div>
       </header>
-      <main className={s.main}>
+      <div className={s.main}>
         {loading ? (
           <Card>
             <p role="status">Đang tải khóa học và tiến độ…</p>
@@ -1573,7 +1572,7 @@ export default function PythonStudio() {
             </button>
           </aside>
         )}
-      </main>
+      </div>
       <footer className={s.footer}>
         <div className={s.footerInner}>
           <div className={s.footerLeft}>

@@ -1,3 +1,4 @@
+import LessonShell from '@/components/lesson/LessonShell';
 import PageStyles from '@/components/PageStyles';
 import PythonStudio from '@/components/python-studio/PythonStudio';
 import StudioLesson from '@/components/python-studio/StudioLesson';
@@ -32,7 +33,10 @@ export default async function LessonPythonPage({
   return (
     <>
       <PageStyles hrefs={STUDIO_CSS} />
-      <StudioLesson courseId="python" lessonNo={sortOrder} />
+      {/* Studio có thanh tiến độ bước + nút tiếp theo riêng → vỏ chỉ lo mục lục/điều hướng khoá (nav none). */}
+      <LessonShell courseId="python" lessonIndex={sortOrder - 1} layout="fill" nav="none">
+        <StudioLesson courseId="python" lessonNo={sortOrder} />
+      </LessonShell>
     </>
   );
 }

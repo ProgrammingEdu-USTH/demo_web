@@ -16,7 +16,8 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 
 import type { PlayGame, StudioLesson } from '../src/lib/studio-lesson';
 
-const API = process.env.E2E_API_URL || 'http://localhost:5000';
+// Frontend gọi backend qua proxy cùng origin /backend (src/proxy.ts).
+const API = process.env.E2E_API_URL || 'http://localhost:3000/backend';
 const BUNDLE = join(__dirname, '..', '..', 'scripts', 'pe-v3', 'out-advanced', 'lessons.json');
 const SHOTS = process.env.E2E_SHOTS;
 
@@ -44,6 +45,8 @@ async function mockApi(page: Page) {
   await page.route(`${API}/**`, async (route) => {
     const req = route.request();
     const url = new URL(req.url());
+    // Đường dẫn backend sau khi bỏ tiền tố proxy /backend.
+    Object.defineProperty(url, 'pathname', { value: url.pathname.replace(/^\/backend/, '') });
     if (req.method() === 'OPTIONS')
       return route.fulfill({
         status: 204,

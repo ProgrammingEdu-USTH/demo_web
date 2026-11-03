@@ -35,7 +35,7 @@ self.onmessage = async ({ data }) => {
       return;
     }
 
-    importScripts('https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js');
+    importScripts('/static/vendor/pyodide/pyodide.js');
     // Print nào lọt ra ngoài bộ chấm (hiếm) vẫn được giữ lại để hiện cho học viên.
     let stray = '';
     const write = (line) => {
@@ -43,7 +43,7 @@ self.onmessage = async ({ data }) => {
     };
     const [py, harness] = await Promise.all([
       loadPyodide({
-        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/',
+        indexURL: '/static/vendor/pyodide/',
         stdout: write,
         stderr: write,
       }),

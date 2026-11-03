@@ -1,0 +1,3 @@
+/* F-02: chỉnh CSS legacy khi markup SPA nằm trong AppShell (sidebar/topbar legacy đã ẩn). */
+/* style.css cho #main padding-top:50px để chừa HeaderBar cố định — HeaderBar đã ẩn nên bỏ. */
+.pe-hub#main { padding-top: 0; }

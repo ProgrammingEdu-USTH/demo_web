@@ -8,7 +8,16 @@
 // components/python-studio; ăn theo token --edu-*/--st-* đã gom ở
 // edu-theme.css + studio-tokens.css (--st-chrome-h/--st-action-h/--st-col/
 // --st-card-radius được tạo sẵn từ trước, dùng ở đây).
+import { createContext, useContext } from 'react';
+
 import styles from './LessonChrome.module.css';
+
+/** Vỏ bài học (LessonShell) đưa XP + nút ⋯ vào thanh này để lesson chỉ có MỘT thanh đầu, không chồng hai thanh. */
+export interface LessonChromeExtras {
+  xp?: number;
+  onMenu: () => void;
+}
+export const LessonChromeExtrasContext = createContext<LessonChromeExtras | null>(null);
 
 export interface LessonChromeProps {
   /** Bước hiện tại, 1-based. */
@@ -60,6 +69,7 @@ export default function LessonChrome({
   doneSteps,
   children,
 }: LessonChromeProps) {
+  const extras = useContext(LessonChromeExtrasContext);
   const primaryClass =
     primaryTone === 'ok'
       ? styles.primaryBtnOk
@@ -142,17 +152,31 @@ export default function LessonChrome({
             <span aria-hidden="true">🔥</span>
             <span>{streak}</span>
           </div>
+
+          {extras?.xp !== undefined && (
+            <div className={styles.xpPill} title="Tổng XP">
+              <span>{extras.xp}</span>
+              <span>XP</span>
+            </div>
+          )}
+          {extras && (
+            <button type="button" aria-label="Thêm tuỳ chọn" title="Thêm tuỳ chọn" className={styles.closeBtn} onClick={extras.onMenu}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
+              </svg>
+            </button>
+          )}
         </div>
       </header>
 
-      <main className={styles.main}>
+      <div className={styles.main}>
         <div className={styles.contentContainer}>
           {/* key={step} để mỗi lần đổi bước là một lần chạy lại animation vào */}
           <div key={step} className={styles.stepEnter}>
             {children}
           </div>
         </div>
-      </main>
+      </div>
 
       <footer className={styles.bottomBar}>
         <div className={styles.bottomBarInner}>

@@ -4,7 +4,9 @@
 // the JSON if needed, then save it into lessons.content_json. The parse step
 // never writes to the database — saving goes through the existing
 // POST /api/admin/lessons route.
+import { Upload } from 'lucide-react';
 import { useState } from 'react';
+import { Badge, Button, Card, CardDescription, CardHeader, CardTitle, EmptyState, Field, Input, Textarea } from '@/components/ui';
 import { apiFetch } from '@/lib/api';
 
 type Parsed = Record<string, unknown>;
@@ -55,7 +57,8 @@ function summarise(key: string, step: unknown): string[] {
   return out;
 }
 
-export default function LessonImport() {
+// onSaved: để trang cha làm mới danh sách khoá/bài sau khi lưu.
+export default function LessonImport({ onSaved }: { onSaved?: () => void } = {}) {
   const [file, setFile] = useState<File | null>(null);
   const [parsed, setParsed] = useState<Parsed | null>(null);
   const [draft, setDraft] = useState('');
@@ -166,6 +169,7 @@ export default function LessonImport() {
         `Đã lưu bài ${order} vào khoá "${courseId}". Mở /lesson/python?lesson=${order - 1} để xem.`,
       );
       setErrors([]);
+      onSaved?.();
     } catch (error) {
       setStatus((error as Error).message);
     } finally {
@@ -174,35 +178,41 @@ export default function LessonImport() {
   }
 
   return (
-    <section className="card form-box area-lesson-import">
-      <div className="card-head">
-        <h2>Nhập bài học từ PDF / Markdown</h2>
-        <p className="card-sub">
-          Tải file lên, hệ thống nhận diện thành 4 bước S1–S4 rồi bạn duyệt trước khi
-          lưu. Xem đúng mẫu heading trong LESSON-IMPORT-FORMAT.md.
-        </p>
-      </div>
+    <Card className="flex flex-col gap-4">
+      <CardHeader>
+        <CardTitle>Nhập bài học từ PDF / Markdown</CardTitle>
+        <CardDescription>
+          Tải file lên, hệ thống nhận diện thành 4 bước S1–S4 rồi bạn duyệt trước khi lưu. Xem đúng mẫu
+          heading trong LESSON-IMPORT-FORMAT.md.
+        </CardDescription>
+      </CardHeader>
 
-      <div className="import-drop">
+      <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-border-strong bg-surface-2 p-4">
+        {/* Chưa chọn file: nói rõ cần gì (trạng thái rỗng) thay vì chỉ để ô chọn file trống */}
+        {!file ? <EmptyState compact icon={<Upload aria-hidden="true" />} title="Chọn file bài học" description="Hỗ trợ .md, .markdown, .txt hoặc .pdf." /> : null}
         <input
           type="file"
           accept=".md,.markdown,.txt,.pdf"
+          aria-label="Chọn file .md hoặc .pdf"
+          className="max-w-full text-sm text-fg"
           onChange={(e) => {
             setFile(e.target.files?.[0] ?? null);
             setStatus('');
           }}
         />
-        <div className="form-actions" style={{ justifyContent: 'center' }}>
-          <button className="btn-primary" disabled={busy} onClick={() => void runImport()}>
-            {busy ? 'Đang xử lý…' : 'Đọc file & nhận diện'}
-          </button>
-        </div>
+        <Button variant="primary" loading={busy} onClick={() => void runImport()}>
+          {busy ? 'Đang xử lý…' : 'Đọc file & nhận diện'}
+        </Button>
       </div>
 
-      {status && <p className="hint">{status}</p>}
+      {status && (
+        <p role="status" className="text-sm text-fg-muted">
+          {status}
+        </p>
+      )}
 
       {errors.length > 0 && (
-        <ul className="import-errors">
+        <ul role="alert" className="m-0 flex list-none flex-col gap-1 rounded-md bg-danger-soft p-3 text-sm text-danger-soft-fg">
           {errors.map((e) => (
             <li key={e}>{e}</li>
           ))}
@@ -211,96 +221,61 @@ export default function LessonImport() {
 
       {parsed && (
         <>
-          <p className="hint">
-            Nhận diện bằng: <span className="import-badge">{parser || '—'}</span>{' '}
-            {parser === 'gemini' &&
-              'Kết quả từ AI có thể sai hoặc thiếu — đọc kỹ từng bước.'}
+          <p className="flex flex-wrap items-center gap-2 text-sm text-fg-muted">
+            Nhận diện bằng: <Badge variant={parser === 'gemini' ? 'warning' : 'info'}>{parser || '—'}</Badge>
+            {parser === 'gemini' && 'Kết quả từ AI có thể sai hoặc thiếu — đọc kỹ từng bước.'}
           </p>
 
-          <div className="import-summary">
+          <div className="grid gap-3 sm:grid-cols-2">
             {Object.keys(STEP_TITLES).map((key) => {
               const rows = summarise(key, parsed[key]);
               return (
                 <div
-                  className={`import-step${rows.length ? '' : ' is-empty'}`}
                   key={key}
+                  className={`rounded-lg border border-solid border-border p-3 ${rows.length ? 'bg-surface' : 'bg-surface-2 opacity-70'}`}
                 >
-                  <h4>{STEP_TITLES[key]}</h4>
+                  <h4 className="m-0 mb-1 text-sm font-semibold text-fg">{STEP_TITLES[key]}</h4>
                   {rows.length ? (
-                    <ul>
+                    <ul className="m-0 list-disc pl-5 text-sm text-fg-muted">
                       {rows.map((r) => (
                         <li key={r}>{r}</li>
                       ))}
                     </ul>
                   ) : (
-                    <small>Không có dữ liệu — bước này sẽ bị ẩn.</small>
+                    <small className="text-fg-muted">Không có dữ liệu — bước này sẽ bị ẩn.</small>
                   )}
                 </div>
               );
             })}
           </div>
 
-          <div className="row">
-            <div className="field">
-              <label htmlFor="imCourse">Mã khoá học</label>
-              <input
-                id="imCourse"
-                value={courseId}
-                onChange={(e) => setCourseId(e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="imSort">Số thứ tự bài (sort_order, bắt đầu từ 1)</label>
-              <input
-                id="imSort"
-                type="number"
-                min={1}
-                value={sortOrder}
-                placeholder="vd: 10"
-                onChange={(e) => setSortOrder(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="row">
-            <div className="field">
-              <label htmlFor="imModule">Module</label>
-              <input
-                id="imModule"
-                value={moduleName}
-                placeholder="vd: Module 2: Cú pháp cơ bản"
-                onChange={(e) => setModuleName(e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="imXp">XP thưởng</label>
-              <input
-                id="imXp"
-                type="number"
-                value={xpReward}
-                onChange={(e) => setXpReward(e.target.value)}
-              />
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Mã khoá học">
+              <Input value={courseId} onChange={(e) => setCourseId(e.target.value)} />
+            </Field>
+            <Field label="Số thứ tự bài" hint="sort_order, bắt đầu từ 1">
+              <Input type="number" min={1} value={sortOrder} placeholder="vd: 10" onChange={(e) => setSortOrder(e.target.value)} />
+            </Field>
+            <Field label="Module">
+              <Input value={moduleName} placeholder="vd: Module 2: Cú pháp cơ bản" onChange={(e) => setModuleName(e.target.value)} />
+            </Field>
+            <Field label="XP thưởng">
+              <Input type="number" value={xpReward} onChange={(e) => setXpReward(e.target.value)} />
+            </Field>
           </div>
 
-          <div className="field">
-            <label htmlFor="imJson">
-              Nội dung JSON (sửa được — ví dụ thêm sơ đồ bộ nhớ cho S1)
-            </label>
-            <textarea
-              id="imJson"
-              className="import-json"
+          <Field label="Nội dung JSON" hint="Sửa được — ví dụ thêm sơ đồ bộ nhớ cho S1.">
+            <Textarea
+              rows={16}
+              className="font-mono text-xs"
               value={draft}
               spellCheck={false}
               onChange={(e) => setDraft(e.target.value)}
             />
-          </div>
+          </Field>
 
-          <div className="form-actions">
-            <button className="btn-primary" disabled={busy} onClick={() => void save()}>
-              Lưu vào khoá học
-            </button>
-            <button
-              className="btn-ghost"
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
               onClick={() => {
                 setParsed(null);
                 setDraft('');
@@ -308,11 +283,14 @@ export default function LessonImport() {
                 setStatus('');
               }}
             >
-              Hủy
-            </button>
+              Huỷ
+            </Button>
+            <Button variant="primary" loading={busy} onClick={() => void save()}>
+              Lưu vào khoá học
+            </Button>
           </div>
         </>
       )}
-    </section>
+    </Card>
   );
 }

@@ -255,7 +255,7 @@ export class QuizzesService {
     let score = 0;
     const detail = questions.map((q, i) => {
       const given = answers?.[i];
-      const correct = this.isCorrect(q.correct, given);
+      const correct = this.isCorrect(q, given);
       if (correct) score += 1;
       return {
         question: q.question,
@@ -470,8 +470,11 @@ export class QuizzesService {
   private async persistQuiz(
     userId: number,
     courseId: string,
-    picked: QuizQuestion[],
+    questions: QuizQuestion[],
   ) {
+    // Nội dung bài hay để đáp án đúng ở vị trí đầu -> chọn A cả đề cũng đủ điểm.
+    // Xáo MỖI lần sinh đề, trước khi lưu snapshot (đề đã lưu không bị đụng tới).
+    const picked = questions.map((q) => this.shuffleOptions(q));
     const quiz = await this.prisma.quiz.create({
       data: {
         userId,
@@ -602,8 +605,22 @@ export class QuizzesService {
       return null;
     }
 
-    // Dạng 1 — đã chuẩn, giữ nguyên.
-    if (x.correct !== undefined) return x as unknown as QuizQuestion;
+    // Dạng 1 — `correct` ở cấp câu hỏi. Nội dung PE v3 (khoá Python) vẫn để
+    // options là object {text, detail, correct}: đổi về chuỗi để (a) so được với
+    // đáp án client gửi, (b) không lộ cờ `correct` qua stripAnswers().
+    if (x.correct !== undefined) {
+      const hasObj = x.options.some((o) => o && typeof o === 'object');
+      if (!hasObj) return x as unknown as QuizQuestion;
+      return {
+        ...x,
+        options: x.options.map((o) =>
+          o && typeof o === 'object' ? String(o.text ?? o.label ?? '') : String(o),
+        ),
+        explanation:
+          x.explanation ??
+          (typeof x.correct === 'number' ? x.options[x.correct]?.detail : undefined),
+      } as unknown as QuizQuestion;
+    }
 
     // Dạng 2 — tìm lựa chọn được đánh dấu đúng.
     const idx = x.options.findIndex(
@@ -632,6 +649,30 @@ export class QuizzesService {
     return copy.slice(0, n);
   }
 
+  /**
+   * Xáo thứ tự `options` và tính lại `correct` theo vị trí mới. `correct` dạng
+   * chỉ số thì đổi theo; dạng chuỗi (so theo nội dung) giữ nguyên vì vẫn đúng.
+   * Câu có options không phải chuỗi thì để nguyên, tránh làm hỏng dữ liệu lạ.
+   */
+  private shuffleOptions(q: QuizQuestion): QuizQuestion {
+    const opts = q.options as unknown[];
+    if (!Array.isArray(opts) || opts.length < 2) return q;
+    if (!opts.every((o) => typeof o === 'string')) return q;
+
+    const order = this.sample(
+      opts.map((_, i) => i),
+      opts.length,
+    );
+    const next: QuizQuestion = {
+      ...q,
+      options: order.map((i) => opts[i] as string),
+    };
+    if (typeof q.correct === 'number') {
+      next.correct = order.indexOf(q.correct);
+    }
+    return next;
+  }
+
   /** Bỏ 'correct' và 'explanation' — dùng ở MỌI nhánh trả câu hỏi cho FE. */
   private stripAnswers(questions: QuizQuestion[]) {
     return questions.map((q, i) => ({
@@ -641,11 +682,33 @@ export class QuizzesService {
     }));
   }
 
-  private isCorrect(expected: number | string, given: unknown): boolean {
+  /** Văn bản của một lựa chọn; chịu được quiz cũ đã lưu options dạng object. */
+  private optionText(o: unknown): string | null {
+    if (typeof o === 'string') return o;
+    if (o && typeof o === 'object') {
+      const r = o as Record<string, unknown>;
+      const t = r.text ?? r.label;
+      return typeof t === 'string' ? t : null;
+    }
+    return null;
+  }
+
+  private isCorrect(q: QuizQuestion, given: unknown): boolean {
     if (given === undefined || given === null) return false;
-    return (
-      String(expected).trim().toLowerCase() ===
-      String(given).trim().toLowerCase()
-    );
+    const norm = (v: unknown) => String(v).trim().toLowerCase();
+    const g = norm(given);
+    if (norm(q.correct) === g) return true;
+    // Khoá Python: normalizeQuestion đổi `correct` thành CHỈ SỐ, nhưng FE gửi
+    // nguyên văn đáp án — nên chấp nhận cả text của options[correct].
+    if (typeof q.correct === 'number') {
+      const opt = this.optionText((q.options as unknown[])?.[q.correct]);
+      if (opt !== null && norm(opt) === g) return true;
+    }
+    // Chiều ngược: `correct` lưu dạng chữ nhưng client gửi CHỈ SỐ lựa chọn.
+    if (typeof q.correct === 'string' && /^\d+$/.test(g)) {
+      const opt = this.optionText((q.options as unknown[])?.[Number(g)]);
+      if (opt !== null && norm(opt) === norm(q.correct)) return true;
+    }
+    return false;
   }
 }

@@ -13,11 +13,11 @@ export interface ConceptProps {
 export default function Concept({ termIcon, term, description, code }: ConceptProps) {
   return (
     <section className={shellStyles.card}>
-      <span className={shellStyles.eyebrow} style={{ marginBottom: 20 }}>
+      <span className={`${shellStyles.eyebrow} ![margin-bottom:20px]`} >
         {termIcon}
         {term}
       </span>
-      <p className={shellStyles.description} style={{ fontSize: 16, marginTop: 0, marginBottom: 20 }}>
+      <p className={`${shellStyles.description} ![font-size:16px] ![margin-top:0] ![margin-bottom:20px]`} >
         {description}
       </p>
       {code && <CodeBlock lines={code} showDots={false} />}

@@ -13,37 +13,16 @@ export interface FeedbackBannerProps {
 export default function FeedbackBanner({ correct, title, explanation }: FeedbackBannerProps) {
   return (
     <div
-      className={styles.feedbackBanner}
-      style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 14,
-        background: correct ? 'var(--st-ok-bg)' : 'var(--st-err-bg)',
-        border: `1px solid ${correct ? 'var(--st-ok-line)' : 'var(--st-err-line)'}`,
-        borderRadius: 14,
-        padding: '16px 18px',
-        marginTop: 16,
-      }}
+      className={`${styles.feedbackBanner} ![display:flex] ![align-items:flex-start] ![gap:14px] ![border-radius:14px] ![padding:16px_18px] ![margin-top:16px] ${correct ? '![background:var(--st-ok-bg)] ![border:1px_solid_var(--st-ok-line)]' : '![background:var(--st-err-bg)] ![border:1px_solid_var(--st-err-line)]'}`}
     >
       <span
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: '50%',
-          background: correct ? 'var(--st-ok-text)' : 'var(--st-err-text)',
-          color: 'var(--edu-panel-bg-solid)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          fontWeight: 700,
-        }}
+        className={`![width:28px] ![height:28px] ![border-radius:50%] ${correct ? '![background:var(--st-ok-text)]' : '![background:var(--st-err-text)]'} ![color:var(--edu-panel-bg-solid)] ![display:flex] ![align-items:center] ![justify-content:center] ![flex-shrink:0] ![font-weight:700]`}
       >
         {correct ? '✓' : '✕'}
       </span>
       <div>
-        <div style={{ fontWeight: 700, color: correct ? 'var(--st-ok-text)' : 'var(--st-err-text)' }}>{title}</div>
-        <div style={{ fontSize: 13, color: 'var(--edu-t2)', marginTop: 4 }}>{explanation}</div>
+        <div className={`![font-weight:700] ${correct ? '![color:var(--st-ok-text)]' : '![color:var(--st-err-text)]'}`}>{title}</div>
+        <div className="![font-size:13px] ![color:var(--edu-t2)] ![margin-top:4px]">{explanation}</div>
       </div>
     </div>
   );

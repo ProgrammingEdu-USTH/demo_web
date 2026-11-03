@@ -34,11 +34,13 @@ export interface ParsonsProps {
   revealed?: string[];
 }
 
+// Thụt lề theo cấp: class phải viết nguyên văn để Tailwind quét được.
+const INDENT_CLS = ['![padding-left:0px]', '![padding-left:20px]', '![padding-left:40px]', '![padding-left:60px]', '![padding-left:80px]', '![padding-left:100px]', '![padding-left:120px]'];
+
 function Line({ line, num }: { line: ParsonsLine; num: number }) {
   return (
     <div
-      className={styles.codeLine}
-      style={{ paddingLeft: line.indent * 20, opacity: line.fixed ? 0.55 : 1 }}
+      className={`${styles.codeLine} ${INDENT_CLS[Math.min(line.indent, INDENT_CLS.length - 1)]} ${line.fixed ? '![opacity:0.55]' : ''}`}
     >
       <span className={styles.lineNum}>{num}</span>
       <span className={styles.codeText}>{line.content}</span>
@@ -67,15 +69,7 @@ export default function Parsons({
             <Line key={line.id} line={line} num={i + 1} />
           ))}
           <div
-            style={{
-              border: '1px dashed var(--st-code-gutter)',
-              borderRadius: 6,
-              padding: '6px 12px',
-              margin: '6px 0',
-              fontSize: 11,
-              color: 'var(--st-syn-comment)',
-              textAlign: 'center',
-            }}
+            className="![border:1px_dashed_var(--st-code-gutter)] ![border-radius:6px] ![padding:6px_12px] ![margin:6px_0] ![font-size:11px] ![color:var(--st-syn-comment)] ![text-align:center]"
           >
             + Bấm một dòng lệnh bên dưới để nối tiếp vào đây
           </div>
@@ -84,11 +78,11 @@ export default function Parsons({
           ))}
         </div>
       </div>
-      <div style={{ marginTop: 14 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--edu-t2)', marginBottom: 8 }}>
+      <div className="![margin-top:14px]">
+        <div className="![font-size:12px] ![font-weight:700] ![color:var(--edu-t2)] ![margin-bottom:8px]">
           {revealed ? 'DÒNG LỆNH CÒN LẠI (CÓ DÒNG BẪY)' : <>DÒNG LỆNH CÒN LẠI &amp; DÒNG GÂY NHIỄU</>}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="![display:flex] ![flex-direction:column] ![gap:8px]">
           {pool.map((item) => {
             const showReason =
               item.distractorReason && (!revealed || revealed.includes(item.id));
@@ -96,22 +90,16 @@ export default function Parsons({
               <button
                 key={item.id}
                 type="button"
-                className={styles.optionCard}
                 disabled={Boolean(revealed && showReason)}
                 onClick={() => (item.distractorReason ? onAttemptDistractor(item.id) : onPick(item.id))}
-                style={{
-                  justifyContent: 'space-between',
-                  opacity: revealed && showReason ? 0.6 : 1,
-                  minWidth: 0,
-                  gap: 8,
-                }}
+                className={`${styles.optionCard} ![justify-content:space-between] ![min-width:0] ![gap:8px] ${revealed && showReason ? '![opacity:0.6]' : ''}`}
               >
                 {/* Giữ thụt lề (pre) nhưng cuộn ngang trong nút, không đẩy rộng trang. */}
-                <code style={{ display: 'block', flex: 1, whiteSpace: 'pre', overflowX: 'auto', minWidth: 0, textAlign: 'left' }}>
+                <code className="![display:block] ![flex:1] ![white-space:pre] ![overflow-x:auto] ![min-width:0] ![text-align:left]">
                   {item.content}
                 </code>
                 {showReason && (
-                  <span style={{ fontSize: 11, color: 'var(--st-err-text)', background: 'var(--st-err-bg)', borderRadius: 999, padding: '2px 10px', whiteSpace: 'normal' }}>
+                  <span className="![font-size:11px] ![color:var(--st-err-text)] ![background:var(--st-err-bg)] ![border-radius:999px] ![padding:2px_10px] ![white-space:normal]">
                     Nhiễu: {item.distractorReason}
                   </span>
                 )}

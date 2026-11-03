@@ -1,31 +1,41 @@
 import type { NextConfig } from "next";
 
-const isDev = process.env.NODE_ENV === "development";
-const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// CSP của TRANG (có nonce, đổi theo từng request) do src/proxy.ts sinh. Ở đây
+// chỉ còn header tĩnh áp cho mọi phản hồi, kể cả file trong public/.
 
-// CSP cho các trang frontend (CSP của NestJS chỉ áp lên response API, không
-// bảo vệ được trang nơi JS thực sự chạy).
-//
-// script-src còn 'unsafe-inline' vì JS legacy dùng ~70 handler nội tuyến
-// (onclick=...) trong chuỗi innerHTML — nonce không áp được cho thuộc tính
-// handler. Dù vậy policy này vẫn chặn: nạp script từ domain lạ, gửi dữ liệu
-// (fetch/XHR) tới domain lạ, <base> injection, plugin, và bị nhúng iframe.
-// Khi JS legacy đã chuyển hết sang React thì bỏ 'unsafe-inline' và dùng nonce.
-//
-// 'wasm-unsafe-eval': Pyodide (Python Studio) biên dịch WebAssembly.
-const csp = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""} https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tailwindcss.com`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
-  "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
-  // Avatar OAuth (Google/Facebook) là URL https bất kỳ.
-  "img-src 'self' data: blob: https:",
-  `connect-src 'self' ${API_ORIGIN} https://cdn.jsdelivr.net`,
-  "worker-src 'self' blob:",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'self'",
+/** Header bảo mật chung cho mọi đường dẫn. */
+const SECURITY_HEADERS = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  // Trang không dùng camera, micro, vị trí, thanh toán, USB… — tắt hẳn để
+  // script lạ (nếu có) cũng không xin được quyền.
+  {
+    key: "Permissions-Policy",
+    value:
+      "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), " +
+      "magnetometer=(), gyroscope=(), accelerometer=(), browsing-topics=(), interest-cohort=()",
+  },
+  // Cô lập cửa sổ: trang khác mở trang này (window.open) không giữ được tham chiếu.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // Tài nguyên của trang chỉ được nhúng bởi chính trang (chặn site khác hotlink/đọc chéo).
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  // Vercel tự gắn Access-Control-Allow-Origin: * cho nội dung tĩnh. Có SITE_URL
+  // thì ghi đè bằng đúng origin của site (không site nào khác đọc được qua CORS).
+  ...(process.env.SITE_URL
+    ? [{ key: "Access-Control-Allow-Origin", value: process.env.SITE_URL.replace(/\/+$/, "") }]
+    : []),
+];
+
+/**
+ * CSP của worker chạy Python (Pyodide). Worker lấy CSP từ chính phản hồi của
+ * file .worker.js, nên 'wasm-unsafe-eval' (bắt buộc để biên dịch WebAssembly)
+ * chỉ nằm ở đây — CSP của trang không cần nó.
+ */
+const WORKER_CSP = [
+  "default-src 'none'",
+  "script-src 'self' 'wasm-unsafe-eval'",
+  "connect-src 'self'",
 ].join("; ");
 
 const nextConfig: NextConfig = {
@@ -39,16 +49,14 @@ const nextConfig: NextConfig = {
     // Manifest". Ghim cứng ở đây thì id luôn là "[project]/src/app/...".
     root: __dirname,
   },
+  // Không quảng cáo framework trong header X-Powered-By.
+  poweredByHeader: false,
   async headers() {
     return [
+      { source: "/(.*)", headers: SECURITY_HEADERS },
       {
-        source: "/(.*)",
-        headers: [
-          { key: "Content-Security-Policy", value: csp },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
-        ],
+        source: "/static/js/:file(.*\\.worker\\.js)",
+        headers: [{ key: "Content-Security-Policy", value: WORKER_CSP }],
       },
     ];
   },

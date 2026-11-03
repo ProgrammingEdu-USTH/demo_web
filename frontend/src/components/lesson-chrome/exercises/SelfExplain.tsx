@@ -32,32 +32,20 @@ export default function SelfExplain({
         disabled={disabled}
         placeholder={placeholder || 'Nhập lời giải thích của bạn…'}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: '100%',
-          minHeight: 132,
-          resize: 'vertical',
-          padding: '12px 14px',
-          borderRadius: 12,
-          border: '1px solid var(--edu-sidebar-border)',
-          background: 'var(--edu-panel-bg-solid)',
-          color: 'var(--edu-t1)',
-          font: 'inherit',
-          fontSize: 14,
-          lineHeight: 1.6,
-        }}
+        className="![width:100%] ![min-height:132px] ![resize:vertical] ![padding:12px_14px] ![border-radius:12px] ![border:1px_solid_var(--edu-sidebar-border)] ![background:var(--edu-panel-bg-solid)] ![color:var(--edu-t1)] ![font:inherit] ![font-size:14px] ![line-height:1.6]"
       />
       {requirement && rubricLabels.length === 0 && (
-        <p className={styles.runHint} style={{ marginTop: 10 }}>
+        <p className={`${styles.runHint} ![margin-top:10px]`} >
           {requirement}
         </p>
       )}
       {rubricLabels.length > 0 && (
-        <div className={styles.suggestions} style={{ marginTop: 12 }}>
-          <span className={styles.runHint} style={{ marginRight: 4 }}>
+        <div className={`${styles.suggestions} ![margin-top:12px]`} >
+          <span className={`${styles.runHint} ![margin-right:4px]`} >
             Cần nêu được:
           </span>
           {rubricLabels.map((label) => (
-            <span key={label} className={styles.chip} style={{ cursor: 'default' }}>
+            <span key={label} className={`${styles.chip} ![cursor:default]`} >
               {label}
             </span>
           ))}

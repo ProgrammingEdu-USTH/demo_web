@@ -579,3 +579,11 @@ body.dark .chatbot-quick-btn:hover {
     border-color: #7DD3FC;
 }
 
+
+/* Vỏ mới có bottom-nav cao 4rem ở <640px: nâng nút nổi lên trên thanh đó để không che mục điều hướng. */
+@media (max-width: 639px) {
+    .chatbot-floating-btn {
+        bottom: calc(4rem + env(safe-area-inset-bottom) + 12px);
+        right: 16px;
+    }
+}

@@ -23,17 +23,9 @@ export default function MatchPairs({ left, right, matched, pendingLeft, onPickLe
   return (
     <div>
       <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 10,
-          background: 'var(--edu-panel-bg-solid)',
-          border: '1px solid var(--edu-sidebar-border)',
-          borderRadius: 12,
-          padding: 16,
-        }}
+        className="![display:grid] ![grid-template-columns:1fr_1fr] ![gap:10px] ![background:var(--edu-panel-bg-solid)] ![border:1px_solid_var(--edu-sidebar-border)] ![border-radius:12px] ![padding:16px]"
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="![display:flex] ![flex-direction:column] ![gap:8px]">
           {left.map((item) => {
             const isMatched = !!matched[item.id];
             const isPending = pendingLeft === item.id;
@@ -43,20 +35,14 @@ export default function MatchPairs({ left, right, matched, pendingLeft, onPickLe
                 type="button"
                 disabled={isMatched}
                 onClick={() => onPickLeft(item.id)}
-                className={styles.optionCard}
-                style={{
-                  borderColor: isPending ? 'var(--edu-accent)' : isMatched ? 'var(--st-ok-line)' : undefined,
-                  background: isMatched ? 'var(--st-ok-bg)' : isPending ? 'var(--edu-accent-soft)' : undefined,
-                  opacity: isMatched ? 0.7 : 1,
-                  justifyContent: 'flex-start',
-                }}
+                className={`${styles.optionCard} ![justify-content:flex-start] ${isMatched ? '![border-color:var(--st-ok-line)] ![background:var(--st-ok-bg)] ![opacity:0.7]' : isPending ? '![border-color:var(--edu-accent)] ![background:var(--edu-accent-soft)]' : ''}`}
               >
                 <code>{item.content}</code>
               </button>
             );
           })}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="![display:flex] ![flex-direction:column] ![gap:8px]">
           {right.map((item) => {
             const isMatched = matchedRightIds.has(item.id);
             return (
@@ -65,13 +51,7 @@ export default function MatchPairs({ left, right, matched, pendingLeft, onPickLe
                 type="button"
                 disabled={isMatched || !pendingLeft}
                 onClick={() => onPickRight(item.id)}
-                className={styles.optionCard}
-                style={{
-                  borderColor: isMatched ? 'var(--st-ok-line)' : undefined,
-                  background: isMatched ? 'var(--st-ok-bg)' : undefined,
-                  opacity: isMatched ? 0.7 : pendingLeft ? 1 : 0.5,
-                  justifyContent: 'flex-start',
-                }}
+                className={`${styles.optionCard} ![justify-content:flex-start] ${isMatched ? '![border-color:var(--st-ok-line)] ![background:var(--st-ok-bg)] ![opacity:0.7]' : pendingLeft ? '' : '![opacity:0.5]'}`}
               >
                 {item.content}
               </button>
@@ -79,7 +59,7 @@ export default function MatchPairs({ left, right, matched, pendingLeft, onPickLe
           })}
         </div>
       </div>
-      <div style={{ fontSize: 12, color: 'var(--edu-t3)', marginTop: 10 }}>
+      <div className="![font-size:12px] ![color:var(--edu-t3)] ![margin-top:10px]">
         Đã ghép {Object.keys(matched).length}/{left.length} cặp
       </div>
     </div>

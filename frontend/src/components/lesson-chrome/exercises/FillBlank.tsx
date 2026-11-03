@@ -104,7 +104,7 @@ export default function FillBlank({
       </div>
 
       {suggestions && suggestions.length > 0 && (
-        <div className={styles.suggestions} style={{ marginTop: 14 }}>
+        <div className={`${styles.suggestions} ![margin-top:14px]`} >
           Gợi ý nhanh:
           {suggestions.map((s) => (
             <button

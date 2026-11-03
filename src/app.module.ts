@@ -22,6 +22,8 @@ import { ForumModule } from './forum/forum.module';
 import { RoadmapModule } from './roadmap/roadmap.module';
 import { CourseAdminModule } from './course-admin/course-admin.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
+import { ArenaModule } from './arena/arena.module';
+import { PlaygroundModule } from './playground/playground.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { ChatbotModule } from './chatbot/chatbot.module';
     RoadmapModule,
     CourseAdminModule,
     ChatbotModule,
+    ArenaModule,
+    PlaygroundModule,
   ],
   controllers: [HealthController],
 })

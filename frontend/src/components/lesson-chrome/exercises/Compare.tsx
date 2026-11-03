@@ -12,17 +12,13 @@ export interface CompareSideProps {
 
 function CompareSide({ label, tag, ok, lines }: CompareSideProps) {
   return (
-    <div className={styles.codeCard} style={{ flex: 1, minWidth: 0 }}>
+    <div className={`${styles.codeCard} ![flex:1] ![min-width:0]`} >
       <div
-        className={styles.codeHeader}
-        style={{
-          background: ok ? 'var(--st-ok-bg)' : 'var(--st-err-bg)',
-          color: ok ? 'var(--st-ok-text)' : 'var(--st-err-text)',
-          fontWeight: 700,
-        }}
+        className={`${styles.codeHeader} ${ok ? '![background:var(--st-ok-bg)]' : '![background:var(--st-err-bg)]'} ${ok ? '![color:var(--st-ok-text)]' : '![color:var(--st-err-text)]'} ![font-weight:700]`}
+ 
       >
         <span>{ok ? '✓' : '✕'} {label}</span>
-        <span className={styles.langTag} style={{ color: 'inherit' }}>{tag}</span>
+        <span className={`${styles.langTag} ![color:inherit]`} >{tag}</span>
       </div>
       <div className={styles.codeBody}>
         {lines.map((line) => (
@@ -43,7 +39,7 @@ export interface CompareProps {
 
 export default function Compare({ wrong, right }: CompareProps) {
   return (
-    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+    <div className="![display:flex] ![gap:16px] ![flex-wrap:wrap]">
       <CompareSide {...wrong} />
       <CompareSide {...right} />
     </div>

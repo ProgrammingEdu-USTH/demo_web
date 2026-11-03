@@ -1,3 +1,4 @@
+import LessonShell from '@/components/lesson/LessonShell';
 import PageStyles from '@/components/PageStyles';
 import StudioLesson from '@/components/python-studio/StudioLesson';
 
@@ -21,7 +22,9 @@ export default async function LessonPythonAdvancedPage({
   return (
     <>
       <PageStyles hrefs={STUDIO_CSS} />
-      <StudioLesson courseId="python_advanced" courseName="Python Advanced" lessonNo={sortOrder} />
+      <LessonShell courseId="python_advanced" lessonIndex={sortOrder - 1} layout="fill" nav="none">
+        <StudioLesson courseId="python_advanced" courseName="Python Advanced" lessonNo={sortOrder} />
+      </LessonShell>
     </>
   );
 }

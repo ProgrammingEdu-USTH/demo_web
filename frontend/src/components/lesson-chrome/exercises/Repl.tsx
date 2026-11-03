@@ -40,24 +40,16 @@ export default function Repl({ filename, value, onChange, sampleOutput }: ReplPr
           <span className={styles.langTag}>Chế độ tương tác</span>
         </div>
         <div className={styles.codeBody}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--st-syn-comment)', marginBottom: 8 }}>
+          <div className="![font-size:11px] ![font-weight:700] ![color:var(--st-syn-comment)] ![margin-bottom:8px]">
             DÒNG LỆNH NHẬP LIỆU
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ color: 'var(--st-syn-keyword)' }}>&gt;&gt;&gt;</span>
+          <div className="![display:flex] ![align-items:center] ![gap:10px]">
+            <span className="![color:var(--st-syn-keyword)]">&gt;&gt;&gt;</span>
             <input
               value={value}
               onChange={(e) => { onChange(e.target.value); setLines(null); }}
               onKeyDown={(e) => { if (e.key === 'Enter') run(); }}
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 0,
-                outline: 'none',
-                color: 'var(--st-syn-string)',
-                font: 'inherit',
-                fontSize: 13,
-              }}
+              className="![flex:1] ![background:transparent] ![border:0] ![outline:none] ![color:var(--st-syn-string)] ![font:inherit] ![font-size:13px]"
               aria-label="Biểu thức Python"
             />
           </div>

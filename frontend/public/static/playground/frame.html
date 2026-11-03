@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playground preview</title>
+</head>
+<body>
+<script>
+/* Khung xem trước HTML/CSS/JS của Playground.
+   Trang chính nhúng file này bằng <iframe sandbox="allow-scripts"> (KHÔNG có allow-same-origin):
+   code người học chạy ở origin "null", không đọc được cookie/localStorage/DOM của trang chính.
+   File này cố ý tự chứa mọi thứ (script nội tuyến) vì origin "null" bị CORP same-origin chặn khi tải file phụ. */
+(function () {
+  var parentWin = window.parent;
+  function send(msg) { parentWin.postMessage(msg, '*'); }
+
+  // Mã chèn vào đầu tài liệu của người học: chuyển console.* và lỗi về trang chính.
+  var bridge = '(' + function () {
+    function fmt(v) {
+      if (typeof v === 'string') return v;
+      if (v instanceof Error) return v.stack || String(v);
+      try { return JSON.stringify(v, null, 2); } catch (e) { return String(v); }
+    }
+    function send(level, args) {
+      try { window.parent.postMessage({ source: 'pg-frame', type: 'console', level: level, text: args.map(fmt).join(' ') }, '*'); } catch (e) {}
+    }
+    ['log', 'info', 'warn', 'error', 'debug'].forEach(function (k) {
+      var orig = console[k];
+      console[k] = function () { send(k, Array.prototype.slice.call(arguments)); if (orig) orig.apply(console, arguments); };
+    });
+    window.addEventListener('error', function (e) {
+      send('error', [e.message + (e.lineno ? ' (dòng ' + e.lineno + ')' : '')]);
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      send('error', ['Promise bị từ chối: ' + fmt(e.reason)]);
+    });
+  }.toString() + ')();';
+
+  window.addEventListener('message', function (ev) {
+    if (ev.source !== parentWin) return;
+    var d = ev.data;
+    if (!d || d.type !== 'render') return;
+    var doc = '<!doctype html><html><head><meta charset="utf-8">'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+      + '<scr' + 'ipt>' + bridge + '</scr' + 'ipt>'
+      + '<style>' + String(d.css).replace(/<\/style/gi, '<\\/style') + '</style></head><body>'
+      + d.html
+      + '<scr' + 'ipt>' + String(d.js).replace(/<\/script/gi, '<\\/script') + '\n</scr' + 'ipt></body></html>';
+    document.open();
+    document.write(doc);
+    document.close();
+  });
+  send({ source: 'pg-frame', type: 'ready' });
+})();
+</script>
+</body>
+</html>
