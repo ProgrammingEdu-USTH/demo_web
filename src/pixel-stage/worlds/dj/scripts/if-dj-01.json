@@ -1,0 +1,61 @@
+{
+  "id": "if-dj-01",
+  "world": "dj",
+  "language": "python",
+  "code": "o1 = \"kick\"\no2 = \"hat\"\nif o1 == \"kick\":\n    phat(\"Bùm\")\nif o2 == \"kick\":\n    phat(\"Bùm\")\nprint(\"Xong\")",
+  "actors": [{ "id": "bit", "sprite": "bit-dj", "at": "dj" }],
+  "steps": [
+    {
+      "line": [1, 2],
+      "caption": "Hai biến giữ tên âm của ô 0 và ô 1 trên sequencer. o1 là \"kick\", o2 là \"hat\".",
+      "vars": { "o1": "'kick'", "o2": "'hat'" },
+      "actions": [
+        { "type": "set", "key": "cells", "value": ["kick", "hat"] },
+        { "type": "highlight", "target": "cell0" },
+        { "type": "highlight", "target": "cell1" }
+      ]
+    },
+    {
+      "line": 3,
+      "caption": "if kiểm tra điều kiện o1 == \"kick\". Điều kiện đúng (True) nên Python chạy khối thụt lề ngay bên dưới.",
+      "vars": { "o1 == \"kick\"": "True" },
+      "actions": [
+        { "type": "spawn", "actor": "head", "sprite": "head", "at": "head0" },
+        { "type": "highlight", "target": "splitter", "color": "ok" },
+        { "type": "set", "key": "branch", "value": "kick", "after": 0 }
+      ]
+    },
+    {
+      "line": 4,
+      "caption": "Khối thụt lề chạy: tín hiệu rẽ sang loa trầm và kêu Bùm.",
+      "vars": { "o1 == \"kick\"": "True" },
+      "actions": [
+        { "type": "set", "key": "played", "value": [0] },
+        { "type": "sound", "name": "kick" },
+        { "type": "say", "actor": "kick", "text": "Bùm" },
+        { "type": "emit", "at": "kick", "fx": "note" },
+        { "type": "anim", "actor": "bit", "tag": "work" }
+      ]
+    },
+    {
+      "line": 5,
+      "caption": "o2 == \"kick\" là sai (False) vì o2 là \"hat\". Khối thụt lề ở dòng 6 bị bỏ qua, loa trầm im lặng.",
+      "vars": { "o2 == \"kick\"": "False" },
+      "actions": [
+        { "type": "move", "actor": "head", "to": "head1", "dur": "sm" },
+        { "type": "set", "key": "branch", "value": null, "after": 0 },
+        { "type": "highlight", "target": "splitter", "color": "err", "after": 0 },
+        { "type": "highlight", "target": "cell1", "color": "err", "after": 0 },
+        { "type": "anim", "actor": "bit", "tag": "confused", "after": 0 }
+      ]
+    },
+    {
+      "line": 7,
+      "caption": "print không thụt lề nên không thuộc if nào, lúc nào cũng chạy. Kết quả: Bùm rồi Xong.",
+      "actions": [
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "say", "actor": "bit", "text": "Xong" }
+      ]
+    }
+  ]
+}

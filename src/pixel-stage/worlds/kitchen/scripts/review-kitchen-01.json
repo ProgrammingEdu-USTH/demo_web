@@ -1,0 +1,71 @@
+{
+  "id": "review-kitchen-01",
+  "world": "kitchen",
+  "language": "python",
+  "code": "def thoi_gian(mon):\n    if mon == \"Pizza\":\n        return 3\n    return 1\n\ntong = 0\nfor mon in [\"Pizza\", \"Bánh mì\"]:\n    tong = tong + thoi_gian(mon)\nprint(\"Tổng:\", tong, \"giây\")",
+  "actors": [
+    { "id": "cook", "sprite": "cook", "at": "prep" },
+    { "id": "bit", "sprite": "bit-chef", "at": "out2" }
+  ],
+  "steps": [
+    {
+      "line": [1, 4],
+      "caption": "Ôn lại hàm và if: thoi_gian trả về 3 nếu món là Pizza, còn lại trả về 1. Mới định nghĩa nên chưa có gì chạy.",
+      "actions": [
+        { "type": "set", "key": "light", "value": "on" },
+        { "type": "spawn", "actor": "cong-thuc", "sprite": "ticket", "at": "ticket1", "label": "thoi_gian(mon)" },
+        { "type": "highlight", "target": "cong-thuc", "after": 1 }
+      ]
+    },
+    {
+      "line": 6,
+      "caption": "Biến tong bắt đầu bằng 0, ghi trên đồng hồ bếp. Mỗi vòng lặp sẽ cộng thêm thời gian của một món.",
+      "vars": { "tong": "0" },
+      "actions": [
+        { "type": "label", "target": "clock", "text": "tong = 0" },
+        { "type": "highlight", "target": "clock" }
+      ]
+    },
+    {
+      "line": [7, 8, 2, 3],
+      "caption": "Vòng 1: mon = \"Pizza\", if đúng nên thoi_gian trả về 3. tong = 0 + 3 = 3.",
+      "vars": { "mon": "'Pizza'", "thoi_gian(mon)": "3", "tong": "3" },
+      "actions": [
+        { "type": "move", "actor": "cook", "to": "rail" },
+        { "type": "spawn", "actor": "pizza", "sprite": "pizza", "at": "cook.hand", "after": 0 },
+        { "type": "move", "actor": "cook", "to": "oven1", "after": 1 },
+        { "type": "move", "actor": "pizza", "to": "oven1.in", "after": 1 },
+        { "type": "set", "key": "oven1", "value": "on", "after": 3 },
+        { "type": "timer", "at": "oven1", "seconds": 3, "after": 3 },
+        { "type": "label", "target": "clock", "text": "tong = 3", "after": 5 },
+        { "type": "highlight", "target": "clock", "after": 5 }
+      ]
+    },
+    {
+      "line": [7, 8, 2, 4],
+      "caption": "Vòng 2: mon = \"Bánh mì\", if sai nên chạy tới return 1. tong = 3 + 1 = 4.",
+      "vars": { "mon": "'Bánh mì'", "thoi_gian(mon)": "1", "tong": "4" },
+      "actions": [
+        { "type": "move", "actor": "cook", "to": "rail" },
+        { "type": "spawn", "actor": "bread", "sprite": "bread", "at": "cook.hand", "after": 0 },
+        { "type": "move", "actor": "cook", "to": "oven2", "after": 1 },
+        { "type": "move", "actor": "bread", "to": "oven2.in", "after": 1 },
+        { "type": "set", "key": "oven2", "value": "on", "after": 3 },
+        { "type": "timer", "at": "oven2", "seconds": 1, "after": 3 },
+        { "type": "label", "target": "clock", "text": "tong = 4", "after": 5 },
+        { "type": "highlight", "target": "clock", "after": 5 }
+      ]
+    },
+    {
+      "line": 9,
+      "caption": "Hết list nên vòng for dừng, print in tổng thời gian. Một chương trình nhỏ đã dùng đủ biến, hàm, if và for.",
+      "vars": { "tong": "4" },
+      "actions": [
+        { "type": "move", "actor": "cook", "to": "prep" },
+        { "type": "say", "actor": "bit", "text": "Tổng: 4 giây" },
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "highlight", "target": "clock", "color": "a4" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "id": "branch-dj-01",
+  "world": "dj",
+  "language": "python",
+  "code": "am = \"hat\"\nif am == \"kick\":\n    phat(\"Bùm\")\nelif am == \"snare\":\n    phat(\"Chát\")\nelse:\n    phat(\"Xì\")\nprint(\"Hết\")",
+  "actors": [{ "id": "bit", "sprite": "bit-dj", "at": "dj" }],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "am giữ tên âm của ô đầu tiên: \"hat\". Bộ chia sẽ quyết định tín hiệu đi về thiết bị nào.",
+      "vars": { "am": "'hat'" },
+      "actions": [
+        { "type": "set", "key": "cells", "value": ["hat"] },
+        { "type": "spawn", "actor": "head", "sprite": "head", "at": "head0" },
+        { "type": "highlight", "target": "cell0" }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "Python thử điều kiện đầu tiên: am == \"kick\" là sai. Nhánh if bị bỏ qua, chuyển sang kiểm tra elif.",
+      "vars": { "am == \"kick\"": "False" },
+      "actions": [
+        { "type": "highlight", "target": "splitter" },
+        { "type": "highlight", "target": "kick", "color": "err" }
+      ]
+    },
+    {
+      "line": 4,
+      "caption": "Thử tiếp elif: am == \"snare\" cũng sai. Nhánh trống cũng bị bỏ qua.",
+      "vars": { "am == \"kick\"": "False", "am == \"snare\"": "False" },
+      "actions": [
+        { "type": "highlight", "target": "splitter" },
+        { "type": "highlight", "target": "snare", "color": "err" },
+        { "type": "anim", "actor": "bit", "tag": "confused" }
+      ]
+    },
+    {
+      "line": [6, 7],
+      "caption": "Không điều kiện nào đúng nên else chạy. Tín hiệu rẽ sang hi-hat: Xì.",
+      "vars": { "nhánh": "else" },
+      "actions": [
+        { "type": "set", "key": "branch", "value": "hat" },
+        { "type": "set", "key": "played", "value": [0] },
+        { "type": "sound", "name": "hat" },
+        { "type": "say", "actor": "hat", "text": "Xì" },
+        { "type": "emit", "at": "hat", "fx": "note" },
+        { "type": "anim", "actor": "bit", "tag": "work" }
+      ]
+    },
+    {
+      "line": 8,
+      "caption": "Trong chuỗi if, elif, else chỉ đúng một nhánh được chạy. Nếu am là \"kick\" thì Python dừng ngay ở if và không xét elif, else nữa.",
+      "actions": [
+        { "type": "set", "key": "branch", "value": null },
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "say", "actor": "bit", "text": "Hết" }
+      ]
+    }
+  ]
+}

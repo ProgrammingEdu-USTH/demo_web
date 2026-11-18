@@ -1,0 +1,67 @@
+{
+  "id": "str-blank-01",
+  "world": "blank",
+  "language": "python",
+  "code": "ten = \"pixel\"\nprint(ten[0], ten[-1])\nprint(len(ten))\nprint(ten.upper())\nloi_chao = \"Chào \" + ten\nprint(loi_chao)",
+  "actors": [{ "id": "bit", "sprite": "bit", "at": "left" }],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "Chuỗi là một dãy ký tự xếp liền nhau. Mỗi ký tự có một vị trí (index), bắt đầu đếm từ 0.",
+      "vars": { "ten": "'pixel'" },
+      "actions": [
+        { "type": "spawn", "actor": "c0", "sprite": "box", "at": "ch0", "label": "[0] p" },
+        { "type": "spawn", "actor": "c1", "sprite": "box", "at": "ch1", "label": "[1] i" },
+        { "type": "spawn", "actor": "c2", "sprite": "box", "at": "ch2", "label": "[2] x" },
+        { "type": "spawn", "actor": "c3", "sprite": "box", "at": "ch3", "label": "[3] e" },
+        { "type": "spawn", "actor": "c4", "sprite": "box", "at": "ch4", "label": "[4] l" }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "ten[0] lấy ký tự ở vị trí 0 là p. Index âm đếm từ cuối, nên ten[-1] là ký tự cuối cùng l.",
+      "vars": { "ten[0]": "'p'", "ten[-1]": "'l'" },
+      "actions": [
+        { "type": "highlight", "target": "c0" },
+        { "type": "highlight", "target": "c4", "color": "a2" },
+        { "type": "say", "actor": "bit", "text": "p l" }
+      ]
+    },
+    {
+      "line": 3,
+      "caption": "len() đếm số ký tự của chuỗi: 5. Index lớn nhất vì thế là 4, luôn nhỏ hơn độ dài 1 đơn vị.",
+      "vars": { "len(ten)": "5" },
+      "actions": [
+        { "type": "highlight", "target": "c0", "color": "ok" },
+        { "type": "highlight", "target": "c1", "color": "ok" },
+        { "type": "highlight", "target": "c2", "color": "ok" },
+        { "type": "highlight", "target": "c3", "color": "ok" },
+        { "type": "highlight", "target": "c4", "color": "ok" },
+        { "type": "say", "actor": "bit", "text": "5" }
+      ]
+    },
+    {
+      "line": 4,
+      "caption": "upper() tạo ra một chuỗi mới viết hoa là PIXEL. Bản thân ten vẫn là \"pixel\" vì chuỗi không sửa tại chỗ được.",
+      "vars": { "ten": "'pixel'", "ten.upper()": "'PIXEL'" },
+      "actions": [
+        { "type": "set", "key": "glow", "value": true },
+        { "type": "highlight", "target": "sign", "color": "a3" },
+        { "type": "say", "actor": "bit", "text": "PIXEL" },
+        { "type": "anim", "actor": "bit", "tag": "work" }
+      ]
+    },
+    {
+      "line": [5, 6],
+      "caption": "Dấu + nối hai chuỗi thành một chuỗi mới, gán vào loi_chao. print in ra Chào pixel.",
+      "vars": { "ten": "'pixel'", "loi_chao": "'Chào pixel'" },
+      "actions": [
+        { "type": "set", "key": "glow", "value": false },
+        { "type": "move", "actor": "bit", "to": "center" },
+        { "type": "label", "target": "sign", "text": "loi_chao = 'Chào pixel'", "place": "below", "after": 1 },
+        { "type": "say", "actor": "bit", "text": "Chào pixel", "after": 1 },
+        { "type": "anim", "actor": "bit", "tag": "happy", "after": 1 }
+      ]
+    }
+  ]
+}

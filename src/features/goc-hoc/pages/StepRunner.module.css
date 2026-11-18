@@ -1,0 +1,10 @@
+/* Hộp thoại "Chạy từng dòng": cảnh pixel phủ toàn màn hình trên cảnh phòng và trang con.
+   Giao diện bên trong (dòng code, nút Chạy, caption…) do <StepPlayer /> vẽ nổi trên canvas. */
+.runner {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  background: var(--ground);
+  outline: none;
+}

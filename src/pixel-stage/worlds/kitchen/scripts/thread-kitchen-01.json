@@ -1,0 +1,112 @@
+{
+  "id": "thread-kitchen-01",
+  "world": "kitchen",
+  "language": "python",
+  "code": "import threading\n\nchao = threading.Lock()\n\ndef nau(ten, mon):\n    with chao:\n        print(f\"{ten} dùng chảo nấu {mon}\")\n    print(f\"{ten} xong {mon}\")\n\na = threading.Thread(target=nau, args=(\"An\", \"trứng\"))\nb = threading.Thread(target=nau, args=(\"Bình\", \"rau\"))\na.start(); b.start()\na.join(); b.join()",
+  "actors": [{ "id": "bit", "sprite": "bit-chef", "at": "look2" }],
+  "steps": [
+    {
+      "line": 3,
+      "caption": "Tạo một Lock tên chao, như cái móc treo chảo có ổ khóa. Ai muốn dùng chảo phải lấy được khóa trước.",
+      "vars": { "chao": "Lock (mở)" },
+      "actions": [
+        { "type": "set", "key": "light", "value": "on" },
+        { "type": "set", "key": "hook", "value": true },
+        { "type": "spawn", "actor": "pan", "sprite": "pan", "at": "hook" },
+        { "type": "label", "target": "hook", "text": "chao: mở", "place": "above" },
+        { "type": "highlight", "target": "hook", "color": "ok" }
+      ]
+    },
+    {
+      "line": [10, 11],
+      "caption": "Tạo hai luồng cho hai đầu bếp An và Bình. Thread mới được tạo, chưa chạy.",
+      "vars": { "chao": "Lock (mở)" },
+      "actions": [
+        { "type": "spawn", "actor": "an", "sprite": "cook", "at": "door", "label": "a: An" },
+        { "type": "spawn", "actor": "binh", "sprite": "binh", "at": "door2", "label": "b: Bình" }
+      ]
+    },
+    {
+      "line": 12,
+      "caption": "start() cho hai luồng cùng chạy, cả hai lao tới chảo. Nếu không có khóa, cả hai có thể dùng chảo cùng lúc và làm hỏng món (race condition).",
+      "vars": { "chao": "Lock (mở)" },
+      "actions": [
+        { "type": "label", "target": "an", "text": "" },
+        { "type": "label", "target": "binh", "text": "" },
+        { "type": "move", "actor": "an", "to": "prep", "dur": "md" },
+        { "type": "move", "actor": "binh", "to": "wait", "dur": "lg" }
+      ]
+    },
+    {
+      "line": 6,
+      "caption": "An vào with chao trước nên giữ khóa, Bình tới sau phải đứng chờ. Ai lấy được khóa trước là do hệ điều hành xếp lịch; ở đây giả sử là An.",
+      "vars": { "chao": "Lock (An giữ)", "ten": "'An'", "mon": "'trứng'" },
+      "actions": [
+        { "type": "set", "key": "lock", "value": "An" },
+        { "type": "move", "actor": "pan", "to": "stove" },
+        { "type": "label", "target": "hook", "text": "chao: An giữ", "place": "above" },
+        { "type": "highlight", "target": "hook", "color": "err" },
+        { "type": "anim", "actor": "binh", "tag": "confused" },
+        { "type": "say", "actor": "binh", "text": "Chờ chảo..." }
+      ]
+    },
+    {
+      "line": 7,
+      "caption": "Trong khối with chỉ một luồng được dùng chảo: An nấu trứng.",
+      "vars": { "chao": "Lock (An giữ)", "ten": "'An'", "mon": "'trứng'" },
+      "actions": [
+        { "type": "anim", "actor": "an", "tag": "work" },
+        { "type": "emit", "at": "stove", "fx": "steam" },
+        { "type": "say", "actor": "an", "text": "An dùng chảo nấu trứng" }
+      ]
+    },
+    {
+      "line": [6, 8],
+      "caption": "Ra khỏi with, khóa tự được trả nên Bình lấy được chảo. An in “An xong trứng” bên ngoài khối with, cùng lúc Bình đang nấu.",
+      "vars": { "chao": "Lock (Bình giữ)", "ten": "'Bình'", "mon": "'rau'" },
+      "actions": [
+        { "type": "anim", "actor": "an", "tag": "happy" },
+        { "type": "move", "actor": "an", "to": "out1" },
+        { "type": "say", "actor": "an", "text": "An xong trứng", "after": 1 },
+        { "type": "set", "key": "lock", "value": "Bình" },
+        { "type": "label", "target": "hook", "text": "chao: Bình giữ", "place": "above" },
+        { "type": "anim", "actor": "binh", "tag": "idle" },
+        { "type": "move", "actor": "binh", "to": "prep", "after": 1 }
+      ]
+    },
+    {
+      "line": 7,
+      "caption": "Bình giữ khóa và nấu rau. Lúc này không ai khác chạm được vào chảo.",
+      "vars": { "chao": "Lock (Bình giữ)", "ten": "'Bình'", "mon": "'rau'" },
+      "actions": [
+        { "type": "anim", "actor": "binh", "tag": "work" },
+        { "type": "emit", "at": "stove", "fx": "steam" },
+        { "type": "say", "actor": "binh", "text": "Bình dùng chảo nấu rau" }
+      ]
+    },
+    {
+      "line": 8,
+      "caption": "Bình ra khỏi with, khóa được trả và chảo về móc. Bình in “Bình xong rau”.",
+      "vars": { "chao": "Lock (mở)", "ten": "'Bình'", "mon": "'rau'" },
+      "actions": [
+        { "type": "set", "key": "lock", "value": "free" },
+        { "type": "move", "actor": "pan", "to": "hook" },
+        { "type": "label", "target": "hook", "text": "chao: mở", "place": "above" },
+        { "type": "anim", "actor": "binh", "tag": "happy" },
+        { "type": "move", "actor": "binh", "to": "out2" },
+        { "type": "say", "actor": "binh", "text": "Bình xong rau", "after": 4 }
+      ]
+    },
+    {
+      "line": 13,
+      "caption": "join() bắt luồng chính (Bit) đợi cả hai luồng chạy xong rồi mới đi tiếp.",
+      "vars": { "chao": "Lock (mở)" },
+      "actions": [
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "say", "actor": "bit", "text": "Cả hai xong!" },
+        { "type": "highlight", "target": "an" },
+        { "type": "highlight", "target": "binh" }
+      ]
+    }
+  ]
+}

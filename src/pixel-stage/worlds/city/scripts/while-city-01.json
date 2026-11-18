@@ -1,0 +1,98 @@
+{
+  "id": "while-city-01",
+  "world": "city",
+  "language": "python",
+  "code": "kien_hang = 3\nwhile kien_hang > 0:\n    print(\"Giao hàng, còn\", kien_hang - 1)\n    kien_hang = kien_hang - 1\nprint(\"Hết hàng!\")",
+  "actors": [{ "id": "bit", "sprite": "bit-dispatch", "at": "office" }],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "Kho có 3 kiện hàng, mỗi kiện một shipper xếp hàng ở cổng. Biến kien_hang bằng 3.",
+      "vars": { "kien_hang": "3" },
+      "actions": [
+        { "type": "spawn", "actor": "s1", "sprite": "shipper", "at": "q0" },
+        { "type": "spawn", "actor": "s2", "sprite": "shipper", "at": "q1" },
+        { "type": "spawn", "actor": "s3", "sprite": "shipper", "at": "q2" },
+        { "type": "label", "target": "node.Kho", "text": "kien_hang = 3", "place": "above" }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "while kiểm tra điều kiện trước mỗi vòng. 3 > 0 đúng nên Python đi vào thân vòng lặp.",
+      "vars": { "kien_hang": "3", "kien_hang > 0": "True" },
+      "actions": [
+        { "type": "highlight", "target": "node.Kho", "color": "ok" },
+        { "type": "highlight", "target": "s1" }
+      ]
+    },
+    {
+      "line": [3, 4],
+      "caption": "Thân vòng lặp in thông báo rồi giảm kien_hang còn 2. Hết thân vòng, Python quay lại dòng while để kiểm tra lần nữa.",
+      "vars": { "kien_hang": "2" },
+      "actions": [
+        { "type": "set", "key": "lit", "value": ["Kho-A", "A-C", "C-Khách"] },
+        { "type": "move", "actor": "s1", "to": "node.Kho", "dur": "sm" },
+        { "type": "move", "actor": "s1", "to": "node.A", "dur": "sm", "after": 1 },
+        { "type": "move", "actor": "s1", "to": "node.C", "dur": "sm", "after": 2 },
+        { "type": "move", "actor": "s1", "to": "node.Khách", "dur": "sm", "after": 3 },
+        { "type": "say", "actor": "bit", "text": "Giao hàng, còn 2", "after": 1 },
+        { "type": "move", "actor": "s2", "to": "q0", "after": 1 },
+        { "type": "move", "actor": "s3", "to": "q1", "after": 1 },
+        { "type": "label", "target": "node.Kho", "text": "kien_hang = 2", "place": "above", "after": 4 },
+        { "type": "despawn", "actor": "s1", "fx": "fade", "after": 4 }
+      ]
+    },
+    {
+      "line": [2, 3, 4],
+      "caption": "2 > 0 vẫn đúng nên chạy thêm một vòng: shipper thứ hai lên đường, kien_hang còn 1.",
+      "vars": { "kien_hang": "1" },
+      "actions": [
+        { "type": "highlight", "target": "node.Kho", "color": "ok" },
+        { "type": "set", "key": "lit", "value": ["Kho-A", "A-C", "C-Khách", "Kho-B", "B-D", "D-Khách"] },
+        { "type": "move", "actor": "s2", "to": "node.Kho", "dur": "sm" },
+        { "type": "move", "actor": "s2", "to": "node.B", "dur": "sm", "after": 2 },
+        { "type": "move", "actor": "s2", "to": "node.D", "dur": "sm", "after": 3 },
+        { "type": "move", "actor": "s2", "to": "node.Khách", "dur": "sm", "after": 4 },
+        { "type": "say", "actor": "bit", "text": "Giao hàng, còn 1", "after": 2 },
+        { "type": "move", "actor": "s3", "to": "q0", "after": 2 },
+        { "type": "label", "target": "node.Kho", "text": "kien_hang = 1", "place": "above", "after": 5 },
+        { "type": "despawn", "actor": "s2", "fx": "fade", "after": 5 }
+      ]
+    },
+    {
+      "line": [2, 3, 4],
+      "caption": "1 > 0 đúng, vòng thứ ba: shipper cuối cùng đi giao. kien_hang giảm về 0.",
+      "vars": { "kien_hang": "0" },
+      "actions": [
+        { "type": "highlight", "target": "node.Kho", "color": "ok" },
+        { "type": "set", "key": "lit", "value": ["Kho-A", "A-C", "C-Khách", "Kho-B", "B-D", "D-Khách", "B-C"] },
+        { "type": "move", "actor": "s3", "to": "node.Kho", "dur": "sm" },
+        { "type": "move", "actor": "s3", "to": "node.B", "dur": "sm", "after": 2 },
+        { "type": "move", "actor": "s3", "to": "node.C", "dur": "sm", "after": 3 },
+        { "type": "move", "actor": "s3", "to": "node.Khách", "dur": "sm", "after": 4 },
+        { "type": "say", "actor": "bit", "text": "Giao hàng, còn 0", "after": 2 },
+        { "type": "label", "target": "node.Kho", "text": "kien_hang = 0", "place": "above", "after": 5 },
+        { "type": "despawn", "actor": "s3", "fx": "fade", "after": 5 }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "Lần này 0 > 0 sai nên vòng lặp dừng. Nếu quên dòng giảm kien_hang, điều kiện luôn đúng và vòng lặp chạy mãi.",
+      "vars": { "kien_hang": "0", "kien_hang > 0": "False" },
+      "actions": [
+        { "type": "highlight", "target": "node.Kho", "color": "err" },
+        { "type": "anim", "actor": "bit", "tag": "confused" }
+      ]
+    },
+    {
+      "line": 5,
+      "caption": "Ra khỏi vòng lặp, chương trình chạy tiếp dòng không thụt lề. print báo hết hàng.",
+      "vars": { "kien_hang": "0" },
+      "actions": [
+        { "type": "set", "key": "path", "value": ["Kho-A", "A-C", "C-Khách", "Kho-B", "B-D", "D-Khách", "B-C"] },
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "say", "actor": "bit", "text": "Hết hàng!" }
+      ]
+    }
+  ]
+}

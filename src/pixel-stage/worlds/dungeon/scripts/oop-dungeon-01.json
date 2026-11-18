@@ -1,0 +1,76 @@
+{
+  "id": "oop-dungeon-01",
+  "world": "dungeon",
+  "language": "python",
+  "code": "class QuaiVat:\n    def __init__(self, ten, mau):\n        self.ten = ten\n        self.mau = mau\n        self.trang_thai = \"tuan_tra\"\n\n    def cap_nhat(self, khoang_cach):\n        if self.trang_thai == \"tuan_tra\" and khoang_cach < 5:\n            self.trang_thai = \"duoi_theo\"\n        elif self.trang_thai == \"duoi_theo\" and khoang_cach < 1:\n            self.trang_thai = \"tan_cong\"\n\nclass Slime(QuaiVat):\n    def __init__(self):\n        super().__init__(\"Slime\", 10)\n\ns1 = Slime()\ns2 = Slime()\ns1.cap_nhat(3)    # s1 đuổi theo, s2 vẫn tuần tra",
+  "actors": [],
+  "steps": [
+    {
+      "line": [1, 5],
+      "caption": "class QuaiVat là một bản thiết kế: chưa có con quái nào cả. Nó chỉ mô tả mỗi con sẽ có ten, mau và trang_thai bắt đầu là tuần tra.",
+      "actions": [
+        { "type": "set", "key": "bp", "value": 1 },
+        { "type": "highlight", "target": "board" }
+      ]
+    },
+    {
+      "line": [7, 11],
+      "caption": "cap_nhat là luật chuyển trạng thái: tuần tra thành đuổi theo khi khoảng cách < 5, đuổi theo thành tấn công khi < 1. Đây là một state machine.",
+      "actions": [
+        { "type": "set", "key": "bp", "value": 2 },
+        { "type": "highlight", "target": "board" }
+      ]
+    },
+    {
+      "line": [13, 15],
+      "caption": "Slime kế thừa QuaiVat nên có sẵn mọi thứ của QuaiVat. __init__ của Slime chỉ gọi super().__init__ với tên \"Slime\" và 10 máu.",
+      "actions": [
+        { "type": "set", "key": "bp", "value": 3 },
+        { "type": "highlight", "target": "board", "color": "a3" }
+      ]
+    },
+    {
+      "line": [17, 15, 3, 4, 5],
+      "caption": "s1 = Slime() triệu hồi một object mới từ bản thiết kế. __init__ chạy và gắn cho riêng s1: ten, mau = 10, trang_thai = tuần tra.",
+      "vars": { "s1.ten": "'Slime'", "s1.mau": "10", "s1.trang_thai": "'tuan_tra'" },
+      "actions": [
+        { "type": "set", "key": "portal", "value": true },
+        { "type": "spawn", "actor": "s1", "sprite": "slime", "at": "portal" },
+        { "type": "move", "actor": "s1", "to": "s1spot", "dur": "lg", "after": 1 },
+        { "type": "set", "key": "hp", "value": { "s1": 10 }, "after": 2 },
+        { "type": "set", "key": "fsm", "value": { "s1": "tuan_tra" }, "after": 2 },
+        { "type": "highlight", "target": "hud.s1", "after": 2 }
+      ]
+    },
+    {
+      "line": [18, 15, 3, 4, 5],
+      "caption": "s2 = Slime() tạo object thứ hai từ cùng bản thiết kế. s2 có thanh máu và trạng thái của riêng nó.",
+      "vars": { "s1.trang_thai": "'tuan_tra'", "s2.ten": "'Slime'", "s2.mau": "10", "s2.trang_thai": "'tuan_tra'" },
+      "actions": [
+        { "type": "spawn", "actor": "s2", "sprite": "slime", "at": "portal" },
+        { "type": "move", "actor": "s2", "to": "s2spot", "dur": "lg", "after": 0 },
+        { "type": "set", "key": "hp", "value": { "s1": 10, "s2": 10 }, "after": 1 },
+        { "type": "set", "key": "fsm", "value": { "s1": "tuan_tra", "s2": "tuan_tra" }, "after": 1 },
+        { "type": "highlight", "target": "hud.s2", "after": 1 },
+        { "type": "set", "key": "portal", "value": false, "after": 1 }
+      ]
+    },
+    {
+      "line": [19, 7, 8, 9],
+      "caption": "s1.cap_nhat(3): s1 đang tuần tra và khoảng cách 3 < 5 nên chuyển sang đuổi theo. s2 là object riêng, không được gọi cap_nhat nên vẫn tuần tra.",
+      "vars": { "khoang_cach": "3", "s1.trang_thai": "'duoi_theo'", "s2.trang_thai": "'tuan_tra'" },
+      "actions": [
+        { "type": "spawn", "actor": "hero", "sprite": "bit-hero", "at": "heroDoor" },
+        { "type": "move", "actor": "hero", "to": "hero", "dur": "lg", "after": 0 },
+        { "type": "set", "key": "ruler", "value": { "from": "hero", "to": "s1", "text": "khoang_cach = 3" }, "after": 1 },
+        { "type": "wait", "dur": "md", "after": 1 },
+        { "type": "set", "key": "fsm", "value": { "s1": "duoi_theo", "s2": "tuan_tra" }, "after": 3 },
+        { "type": "set", "key": "fsmEdge", "value": { "s1": 0 }, "after": 3 },
+        { "type": "highlight", "target": "hud.s1", "color": "a4", "after": 3 },
+        { "type": "anim", "actor": "s1", "tag": "work", "after": 3 },
+        { "type": "anim", "actor": "hero", "tag": "confused", "after": 3 },
+        { "type": "anim", "actor": "s2", "tag": "idle", "after": 3 }
+      ]
+    }
+  ]
+}

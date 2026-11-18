@@ -1,0 +1,150 @@
+{
+  "id": "bfs-city-01",
+  "world": "city",
+  "language": "python",
+  "code": "from collections import deque\n\nban_do = {\n    \"Kho\": [\"A\", \"B\"], \"A\": [\"C\"], \"B\": [\"C\", \"D\"],\n    \"C\": [\"Khách\"], \"D\": [\"Khách\"], \"Khách\": [],\n}\n\ndef bfs(bat_dau, dich):\n    hang_doi = deque([[bat_dau]])\n    da_tham = {bat_dau}\n    while hang_doi:\n        duong = hang_doi.popleft()\n        nut = duong[-1]\n        if nut == dich:\n            return duong\n        for ke in ban_do[nut]:\n            if ke not in da_tham:\n                da_tham.add(ke)\n                hang_doi.append(duong + [ke])\n\nprint(bfs(\"Kho\", \"Khách\"))",
+  "actors": [{ "id": "bit", "sprite": "bit-dispatch", "at": "office" }],
+  "steps": [
+    {
+      "line": [3, 6],
+      "caption": "ban_do là một đồ thị: mỗi ngã tư là một đỉnh, mỗi con đường là một cạnh. Từ mỗi đỉnh có danh sách các đỉnh kề đi tới được.",
+      "actions": [
+        { "type": "highlight", "target": "node.Kho" },
+        { "type": "highlight", "target": "node.A" },
+        { "type": "highlight", "target": "node.B" },
+        { "type": "highlight", "target": "node.C" },
+        { "type": "highlight", "target": "node.D" },
+        { "type": "highlight", "target": "node.Khách" }
+      ]
+    },
+    {
+      "line": 21,
+      "caption": "Gọi bfs(\"Kho\", \"Khách\"): tìm đường qua ít ngã tư nhất từ Kho tới nhà Khách.",
+      "actions": [
+        { "type": "say", "actor": "bit", "text": "Giao tới Khách!" },
+        { "type": "highlight", "target": "node.Khách", "color": "a4" }
+      ]
+    },
+    {
+      "line": [9, 10],
+      "caption": "Hàng đợi bắt đầu với một xe mang đường [Kho]. Kho được cắm cờ vào tập da_tham.",
+      "vars": { "hang_doi": "[[Kho]]", "da_tham": "{Kho}" },
+      "actions": [
+        { "type": "spawn", "actor": "b0", "sprite": "bike", "at": "q0" },
+        { "type": "label", "target": "b0", "text": "Kho", "place": "above" },
+        { "type": "spawn", "actor": "fKho", "sprite": "flag", "at": "flag.Kho" }
+      ]
+    },
+    {
+      "line": [12, 13],
+      "caption": "popleft() lấy xe ở đầu hàng ra: đường [Kho], nút đang xét là Kho. Kho chưa phải đích.",
+      "vars": { "hang_doi": "[]", "da_tham": "{Kho}", "duong": "[Kho]", "nut": "Kho" },
+      "actions": [
+        { "type": "move", "actor": "b0", "to": "node.Kho", "dur": "lg" },
+        { "type": "highlight", "target": "node.Kho", "after": 0 }
+      ]
+    },
+    {
+      "line": [16, 19],
+      "caption": "Kề với Kho là A và B, cả hai chưa có cờ: cắm cờ rồi append hai xe vào cuối hàng. Mỗi xe mang theo cả con đường đã đi.",
+      "vars": { "hang_doi": "[[Kho,A], [Kho,B]]", "da_tham": "{Kho, A, B}", "duong": "[Kho]", "nut": "Kho" },
+      "actions": [
+        { "type": "set", "key": "lit", "value": ["Kho-A", "Kho-B"] },
+        { "type": "spawn", "actor": "fA", "sprite": "flag", "at": "flag.A" },
+        { "type": "spawn", "actor": "fB", "sprite": "flag", "at": "flag.B" },
+        { "type": "despawn", "actor": "b0", "fx": "fade" },
+        { "type": "spawn", "actor": "b1", "sprite": "bike", "at": "q0", "after": 3 },
+        { "type": "label", "target": "b1", "text": "Kho→A", "place": "above", "after": 3 },
+        { "type": "spawn", "actor": "b2", "sprite": "bike", "at": "q1", "after": 4 },
+        { "type": "label", "target": "b2", "text": "Kho→B", "place": "above", "after": 4 }
+      ]
+    },
+    {
+      "line": [12, 13, 16, 17, 18, 19],
+      "caption": "Lấy xe [Kho, A] ra, nút là A. Kề với A có C chưa có cờ, nên cắm cờ và thêm xe [Kho, A, C] vào cuối hàng.",
+      "vars": { "hang_doi": "[[Kho,B], [Kho,A,C]]", "da_tham": "{Kho, A, B, C}", "duong": "[Kho, A]", "nut": "A" },
+      "actions": [
+        { "type": "move", "actor": "b1", "to": "node.Kho" },
+        { "type": "move", "actor": "b1", "to": "node.A", "after": 0 },
+        { "type": "move", "actor": "b2", "to": "q0", "after": 0 },
+        { "type": "set", "key": "lit", "value": ["Kho-A", "Kho-B", "A-C"], "after": 1 },
+        { "type": "spawn", "actor": "fC", "sprite": "flag", "at": "flag.C", "after": 1 },
+        { "type": "spawn", "actor": "b3", "sprite": "bike", "at": "q1", "after": 1 },
+        { "type": "label", "target": "b3", "text": "Kho→A→C", "place": "above", "after": 1 },
+        { "type": "despawn", "actor": "b1", "fx": "fade", "after": 5 }
+      ]
+    },
+    {
+      "line": [12, 13, 16, 17, 18, 19],
+      "caption": "Lấy xe [Kho, B] ra, nút là B. C đã có cờ nên bỏ qua, chỉ D được cắm cờ và thêm xe [Kho, B, D].",
+      "vars": { "hang_doi": "[[Kho,A,C], [Kho,B,D]]", "da_tham": "{Kho, A, B, C, D}", "duong": "[Kho, B]", "nut": "B" },
+      "actions": [
+        { "type": "move", "actor": "b2", "to": "node.Kho" },
+        { "type": "move", "actor": "b2", "to": "node.B", "after": 0 },
+        { "type": "move", "actor": "b3", "to": "q0", "after": 0 },
+        { "type": "set", "key": "lit", "value": ["Kho-A", "Kho-B", "A-C", "B-C", "B-D"], "after": 1 },
+        { "type": "say", "actor": "fC", "text": "Có cờ rồi", "after": 1 },
+        { "type": "spawn", "actor": "fD", "sprite": "flag", "at": "flag.D", "after": 1 },
+        { "type": "spawn", "actor": "b4", "sprite": "bike", "at": "q1", "after": 1 },
+        { "type": "label", "target": "b4", "text": "Kho→B→D", "place": "above", "after": 1 },
+        { "type": "despawn", "actor": "b2", "fx": "fade", "after": 6 }
+      ]
+    },
+    {
+      "line": [12, 13, 16, 17, 18, 19],
+      "caption": "Lấy xe [Kho, A, C] ra: Khách chưa có cờ nên cắm cờ và thêm xe [Kho, A, C, Khách]. Đích đã có cờ nhưng BFS chỉ dừng khi lấy nó ra khỏi hàng.",
+      "vars": { "hang_doi": "[[Kho,B,D], [Kho,A,C,Khách]]", "da_tham": "{Kho, A, B, C, D, Khách}", "duong": "[Kho, A, C]", "nut": "C" },
+      "actions": [
+        { "type": "move", "actor": "b3", "to": "node.Kho" },
+        { "type": "move", "actor": "b3", "to": "node.A", "dur": "sm", "after": 0 },
+        { "type": "move", "actor": "b3", "to": "node.C", "dur": "sm", "after": 1 },
+        { "type": "move", "actor": "b4", "to": "q0", "after": 0 },
+        { "type": "set", "key": "lit", "value": ["Kho-A", "Kho-B", "A-C", "B-C", "B-D", "C-Khách"], "after": 2 },
+        { "type": "spawn", "actor": "fKhach", "sprite": "flag", "at": "flag.Khách", "after": 2 },
+        { "type": "spawn", "actor": "b5", "sprite": "bike", "at": "q1", "after": 2 },
+        { "type": "label", "target": "b5", "text": "Kho→A→C→Khách", "place": "above", "after": 2 },
+        { "type": "despawn", "actor": "b3", "fx": "fade", "after": 6 }
+      ]
+    },
+    {
+      "line": [12, 13, 16, 17],
+      "caption": "Lấy xe [Kho, B, D] ra: Khách đã có cờ nên không thêm xe nào. Hàng chỉ còn một xe.",
+      "vars": { "hang_doi": "[[Kho,A,C,Khách]]", "da_tham": "{Kho, A, B, C, D, Khách}", "duong": "[Kho, B, D]", "nut": "D" },
+      "actions": [
+        { "type": "move", "actor": "b4", "to": "node.Kho" },
+        { "type": "move", "actor": "b4", "to": "node.B", "dur": "sm", "after": 0 },
+        { "type": "move", "actor": "b4", "to": "node.D", "dur": "sm", "after": 1 },
+        { "type": "move", "actor": "b5", "to": "q0", "after": 0 },
+        { "type": "set", "key": "lit", "value": ["Kho-A", "Kho-B", "A-C", "B-C", "B-D", "C-Khách", "D-Khách"], "after": 2 },
+        { "type": "say", "actor": "fKhach", "text": "Có cờ rồi", "after": 2 },
+        { "type": "despawn", "actor": "b4", "fx": "fade", "after": 5 }
+      ]
+    },
+    {
+      "line": [12, 15],
+      "caption": "Lấy xe [Kho, A, C, Khách] ra: nút cuối chính là đích nên trả về con đường này. Shipper chạy hết tuyến vàng.",
+      "vars": { "hang_doi": "[]", "duong": "[Kho, A, C, Khách]", "nut": "Khách" },
+      "actions": [
+        { "type": "set", "key": "path", "value": ["Kho-A", "A-C", "C-Khách"] },
+        { "type": "despawn", "actor": "b5", "fx": "fade" },
+        { "type": "spawn", "actor": "ship", "sprite": "shipper", "at": "q0", "after": 1 },
+        { "type": "move", "actor": "ship", "to": "node.Kho", "after": 2 },
+        { "type": "move", "actor": "ship", "to": "node.A", "after": 3 },
+        { "type": "move", "actor": "ship", "to": "node.C", "after": 4 },
+        { "type": "move", "actor": "ship", "to": "node.Khách", "after": 5 },
+        { "type": "highlight", "target": "node.Khách", "color": "a1", "after": 6 }
+      ]
+    },
+    {
+      "line": 21,
+      "caption": "In ra ['Kho', 'A', 'C', 'Khách']: chỉ qua 2 ngã tư ở giữa, ngắn nhất có thể. Đường qua B, D dài bằng nhưng BFS gặp đường qua A trước vì A đứng trước B.",
+      "vars": { "ket_qua": "['Kho', 'A', 'C', 'Khách']" },
+      "actions": [
+        { "type": "label", "target": "result", "text": "['Kho', 'A', 'C', 'Khách']", "place": "below" },
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "say", "actor": "bit", "text": "Giao xong!" },
+        { "type": "emit", "at": "node.Khách", "fx": "spark", "n": 10 }
+      ]
+    }
+  ]
+}

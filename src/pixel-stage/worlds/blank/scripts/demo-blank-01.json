@@ -1,0 +1,83 @@
+{
+  "id": "demo-blank-01",
+  "world": "blank",
+  "language": "python",
+  "code": "ten = \"Bit\"\nprint(\"Xin chào, \" + ten)\nhop = 3\nwhile hop > 0:\n    hop = hop - 1\nprint(\"Xong!\")",
+  "actors": [],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "Gán chuỗi “Bit” cho biến ten. Bit xuất hiện, nhãn dưới chân là tên biến.",
+      "vars": { "ten": "'Bit'" },
+      "actions": [{ "type": "spawn", "actor": "bit", "sprite": "bit", "at": "center", "label": "ten" }]
+    },
+    {
+      "line": 2,
+      "caption": "print ghép hai chuỗi rồi in ra màn hình: Xin chào, Bit.",
+      "vars": { "ten": "'Bit'" },
+      "actions": [
+        { "type": "say", "actor": "bit", "text": "Xin chào, Bit" },
+        { "type": "anim", "actor": "bit", "tag": "happy" }
+      ]
+    },
+    {
+      "line": 3,
+      "caption": "Biến hop bắt đầu bằng 3, như một cái hộp đặt trên kệ.",
+      "vars": { "ten": "'Bit'", "hop": "3" },
+      "actions": [
+        { "type": "anim", "actor": "bit", "tag": "idle" },
+        { "type": "spawn", "actor": "hop", "sprite": "box", "at": "shelf", "label": "hop = 3" },
+        { "type": "highlight", "target": "hop" },
+        { "type": "timer", "at": "sign", "seconds": 3 }
+      ]
+    },
+    {
+      "line": [4, 5],
+      "caption": "Điều kiện hop > 0 đúng nên thân vòng lặp chạy: hop giảm còn 2.",
+      "vars": { "ten": "'Bit'", "hop": "2" },
+      "actions": [
+        { "type": "move", "actor": "bit", "to": "right" },
+        { "type": "label", "target": "hop", "text": "hop = 2", "after": 0 },
+        { "type": "emit", "at": "shelf", "fx": "spark", "after": 0 },
+        { "type": "anim", "actor": "bit", "tag": "work", "after": 0 },
+        { "type": "timer", "at": "sign", "seconds": 2, "after": 0 }
+      ]
+    },
+    {
+      "line": [4, 5],
+      "caption": "Vòng thứ hai: hop còn 1. Camera phóng to để nhìn kỹ hơn.",
+      "vars": { "ten": "'Bit'", "hop": "1" },
+      "actions": [
+        { "type": "camera", "to": "focus", "zoom": 2 },
+        { "type": "label", "target": "hop", "text": "hop = 1", "after": 0 },
+        { "type": "set", "key": "glow", "value": true },
+        { "type": "timer", "at": "sign", "seconds": 1, "after": 0 }
+      ]
+    },
+    {
+      "line": [4, 5],
+      "caption": "Vòng thứ ba: hop về 0, điều kiện sai nên vòng lặp dừng.",
+      "vars": { "ten": "'Bit'", "hop": "0" },
+      "actions": [
+        { "type": "label", "target": "hop", "text": "hop = 0" },
+        { "type": "wait", "dur": "sm" },
+        { "type": "camera", "to": "center", "zoom": 1, "after": 1 },
+        { "type": "despawn", "actor": "hop", "fx": "poof", "after": 2 },
+        { "type": "timer", "at": "sign", "seconds": 0, "after": 2 },
+        { "type": "anim", "actor": "bit", "tag": "confused", "after": 2 }
+      ]
+    },
+    {
+      "line": 6,
+      "caption": "Ra khỏi vòng lặp, chương trình in “Xong!”.",
+      "vars": { "ten": "'Bit'", "hop": "0" },
+      "actions": [
+        { "type": "move", "actor": "bit", "to": "center" },
+        { "type": "anim", "actor": "bit", "tag": "happy", "after": 0 },
+        { "type": "say", "actor": "bit", "text": "Xong!", "after": 0 },
+        { "type": "emit", "at": "bit", "fx": "note", "after": 0 },
+        { "type": "set", "key": "glow", "value": false, "after": 0 }
+      ]
+    }
+  ]
+}

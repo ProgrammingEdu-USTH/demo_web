@@ -1,0 +1,84 @@
+{
+  "id": "func-kitchen-01",
+  "world": "kitchen",
+  "language": "python",
+  "code": "def nuong(mon):\n    print(\"Nướng\", mon)\n    return mon + \" chín\"\n\ndia1 = nuong(\"Pizza\")\ndia2 = nuong(\"Bánh mì\")\nprint(dia1, \"|\", dia2)",
+  "actors": [
+    { "id": "cook", "sprite": "cook", "at": "prep" },
+    { "id": "bit", "sprite": "bit-chef", "at": "out2" }
+  ],
+  "steps": [
+    {
+      "line": [1, 3],
+      "caption": "def chỉ ghi lại một công thức tên là nuong, chưa nướng món nào cả. Thân hàm (phần thụt lề) chỉ chạy khi hàm được gọi.",
+      "actions": [
+        { "type": "set", "key": "light", "value": "on" },
+        { "type": "spawn", "actor": "cong-thuc", "sprite": "ticket", "at": "ticket1", "label": "def nuong(mon)" },
+        { "type": "highlight", "target": "cong-thuc", "after": 1 }
+      ]
+    },
+    {
+      "line": 5,
+      "caption": "Gọi nuong(\"Pizza\"): Python nhảy vào thân hàm, tham số mon nhận giá trị \"Pizza\". Đầu bếp lấy công thức ra làm.",
+      "vars": { "mon": "'Pizza'" },
+      "actions": [
+        { "type": "highlight", "target": "cong-thuc" },
+        { "type": "move", "actor": "cook", "to": "rail" },
+        { "type": "spawn", "actor": "pizza", "sprite": "pizza", "at": "cook.hand", "after": 1 }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "Dòng đầu của thân hàm: in ra Nướng Pizza và cho bánh vào lò.",
+      "vars": { "mon": "'Pizza'" },
+      "actions": [
+        { "type": "move", "actor": "cook", "to": "oven1" },
+        { "type": "move", "actor": "pizza", "to": "oven1.in" },
+        { "type": "set", "key": "oven1", "value": "on", "after": 1 },
+        { "type": "say", "actor": "cook", "text": "Nướng Pizza", "after": 0 },
+        { "type": "anim", "actor": "cook", "tag": "work", "after": 0 }
+      ]
+    },
+    {
+      "line": [3, 5],
+      "caption": "return trả kết quả \"Pizza chín\" về đúng chỗ đã gọi hàm, rồi hàm kết thúc. Kết quả được gán vào dia1.",
+      "vars": { "dia1": "'Pizza chín'" },
+      "actions": [
+        { "type": "set", "key": "oven1", "value": "off" },
+        { "type": "set", "key": "tray", "value": true },
+        { "type": "anim", "actor": "cook", "tag": "idle" },
+        { "type": "move", "actor": "pizza", "to": "tray.1", "dur": "lg" },
+        { "type": "move", "actor": "cook", "to": "prep" },
+        { "type": "label", "target": "pizza", "text": "dia1", "after": 3 }
+      ]
+    },
+    {
+      "line": [6, 2, 3],
+      "caption": "Gọi lần hai với \"Bánh mì\": cùng một công thức được dùng lại, chỉ khác giá trị của mon. Kết quả \"Bánh mì chín\" vào dia2.",
+      "vars": { "dia1": "'Pizza chín'", "mon": "'Bánh mì'", "dia2": "'Bánh mì chín'" },
+      "actions": [
+        { "type": "highlight", "target": "cong-thuc" },
+        { "type": "move", "actor": "cook", "to": "rail" },
+        { "type": "spawn", "actor": "bread", "sprite": "bread", "at": "cook.hand", "after": 1 },
+        { "type": "move", "actor": "cook", "to": "oven2", "after": 2 },
+        { "type": "move", "actor": "bread", "to": "oven2.in", "after": 2 },
+        { "type": "set", "key": "oven2", "value": "on", "after": 4 },
+        { "type": "say", "actor": "cook", "text": "Nướng Bánh mì", "after": 4 },
+        { "type": "wait", "dur": "md", "after": 6 },
+        { "type": "set", "key": "oven2", "value": "off", "after": 7 },
+        { "type": "move", "actor": "bread", "to": "tray.2", "dur": "lg", "after": 7 },
+        { "type": "label", "target": "bread", "text": "dia2", "after": 9 }
+      ]
+    },
+    {
+      "line": 7,
+      "caption": "Hai lần gọi cho hai kết quả riêng, nằm sẵn trên khay. print in cả hai, ngăn cách bởi dấu |.",
+      "vars": { "dia1": "'Pizza chín'", "dia2": "'Bánh mì chín'" },
+      "actions": [
+        { "type": "highlight", "target": "tray" },
+        { "type": "say", "actor": "bit", "text": "Pizza chín | Bánh mì chín" },
+        { "type": "anim", "actor": "bit", "tag": "happy" }
+      ]
+    }
+  ]
+}

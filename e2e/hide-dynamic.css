@@ -1,0 +1,8 @@
+/* Chèn tạm lúc so ảnh (stylePath trong playwright.config.ts), ở cả prototype lẫn app.
+   Ẩn phần thay đổi theo thời gian hoặc ngẫu nhiên. Không dùng `mask` vì các lớp này phủ cả phòng 2752×1536,
+   mặt nạ theo hộp bao sẽ che gần hết ảnh. */
+#clB, #clR { visibility: hidden !important; }     /* mây trôi theo thời gian đã trôi */
+#scode, #sgut { visibility: hidden !important; }  /* laptop đang tự gõ code */
+#notes { visibility: hidden !important; }         /* giấy note nghiêng ngẫu nhiên, tờ mới đến theo hẹn giờ */
+#badge, #cd { color: transparent !important; }    /* số ghi chú, đếm ngược thử thách tuần */
+#leafG { visibility: hidden !important; }         /* lá bay ngẫu nhiên khi mở cửa sổ */

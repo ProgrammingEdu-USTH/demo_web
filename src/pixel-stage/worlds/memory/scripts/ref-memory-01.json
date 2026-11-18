@@ -1,0 +1,63 @@
+{
+  "id": "ref-memory-01",
+  "world": "memory",
+  "language": "python",
+  "code": "gio_hang = [\"táo\", \"sữa\"]   # tạo object\nban_sao = gio_hang          # thêm nhãn thứ 2, cùng một hộp\nban_sao.append(\"bánh\")      # gio_hang cũng thấy \"bánh\"\ndel gio_hang                # gỡ 1 nhãn, hộp vẫn còn\nban_sao = None              # hết nhãn → hộp được dọn",
+  "actors": [{ "id": "bit", "sprite": "bit-dev", "at": "desk" }],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "Python tạo một object list, như một cái hộp đặt trên kệ RAM, rồi buộc nhãn gio_hang vào nó. Số trên hộp là số dây (reference) đang buộc vào.",
+      "vars": { "gio_hang": "→ hộp ['táo', 'sữa']" },
+      "actions": [
+        { "type": "spawn", "actor": "box1", "sprite": "box", "at": "ram.1" },
+        { "type": "label", "target": "box1", "text": "['táo', 'sữa']", "place": "below" },
+        { "type": "set", "key": "boxes", "value": ["box1"] },
+        { "type": "set", "key": "tags", "value": [{ "name": "gio_hang", "to": "box1", "slot": 0 }], "after": 0 }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "ban_sao = gio_hang không sao chép hộp, chỉ buộc thêm nhãn thứ hai vào cùng hộp đó. Hộp giờ có 2 dây.",
+      "vars": { "gio_hang": "→ hộp", "ban_sao": "→ cùng hộp" },
+      "actions": [
+        { "type": "set", "key": "tags", "value": [{ "name": "gio_hang", "to": "box1", "slot": 0 }, { "name": "ban_sao", "to": "box1", "slot": 1 }] },
+        { "type": "highlight", "target": "box1" }
+      ]
+    },
+    {
+      "line": 3,
+      "caption": "append qua ban_sao sửa chính cái hộp đó. Vì gio_hang buộc vào cùng hộp nên gio_hang cũng thấy “bánh”.",
+      "vars": { "gio_hang": "['táo', 'sữa', 'bánh']", "ban_sao": "['táo', 'sữa', 'bánh']" },
+      "actions": [
+        { "type": "move", "actor": "bit", "to": "shelfFront" },
+        { "type": "anim", "actor": "bit", "tag": "work", "after": 0 },
+        { "type": "emit", "at": "box1", "fx": "spark", "after": 0 },
+        { "type": "label", "target": "box1", "text": "['táo', 'sữa', 'bánh']", "place": "below", "after": 0 },
+        { "type": "highlight", "target": "board", "after": 0 }
+      ]
+    },
+    {
+      "line": 4,
+      "caption": "del gio_hang chỉ gỡ cái nhãn chứ không xoá hộp. Hộp còn 1 dây từ ban_sao nên vẫn nằm trên kệ.",
+      "vars": { "ban_sao": "['táo', 'sữa', 'bánh']" },
+      "actions": [
+        { "type": "anim", "actor": "bit", "tag": "idle" },
+        { "type": "set", "key": "tags", "value": [{ "name": "ban_sao", "to": "box1", "slot": 1 }] },
+        { "type": "highlight", "target": "box1" }
+      ]
+    },
+    {
+      "line": 5,
+      "caption": "ban_sao = None cắt dây cuối cùng: số dây về 0 nên CPython giải phóng hộp ngay lập tức (reference counting). Không cần đợi bộ GC.",
+      "vars": { "ban_sao": "None" },
+      "actions": [
+        { "type": "set", "key": "tags", "value": [{ "name": "ban_sao", "to": null, "slot": 1 }] },
+        { "type": "wait", "dur": "md" },
+        { "type": "despawn", "actor": "box1", "fx": "poof", "after": 1 },
+        { "type": "say", "actor": "bit", "text": "Hộp đi luôn!", "after": 1 },
+        { "type": "anim", "actor": "bit", "tag": "happy", "after": 1 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "id": "var-memory-01",
+  "world": "memory",
+  "language": "python",
+  "code": "ten = \"Bit\"\ntuoi = 12\ntuoi = tuoi + 1\nprint(ten, tuoi)\nprint(type(ten), type(tuoi))",
+  "actors": [{ "id": "bit", "sprite": "bit-dev", "at": "desk" }],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "Biến là một cái nhãn tên buộc vào một giá trị. Nhãn ten buộc vào chuỗi \"Bit\", kiểu str.",
+      "vars": { "ten": "'Bit' (str)" },
+      "actions": [
+        { "type": "spawn", "actor": "v-bit", "sprite": "box", "at": "ram.1" },
+        { "type": "label", "target": "v-bit", "text": "\"Bit\" · str", "place": "below" },
+        { "type": "set", "key": "tags", "value": [{ "name": "ten", "to": "v-bit", "slot": 0 }], "after": 0 },
+        { "type": "highlight", "target": "board", "after": 0 }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "Nhãn tuoi buộc vào số nguyên 12, kiểu int. Python tự biết kiểu từ giá trị, không cần khai báo trước.",
+      "vars": { "ten": "'Bit' (str)", "tuoi": "12 (int)" },
+      "actions": [
+        { "type": "spawn", "actor": "v-12", "sprite": "box", "at": "ram.2" },
+        { "type": "label", "target": "v-12", "text": "12 · int", "place": "below" },
+        { "type": "set", "key": "tags", "value": [{ "name": "ten", "to": "v-bit", "slot": 0 }, { "name": "tuoi", "to": "v-12", "slot": 1 }], "after": 0 }
+      ]
+    },
+    {
+      "line": 3,
+      "caption": "Vế phải được tính trước: tuoi + 1 ra giá trị mới là 13. Sau đó nhãn tuoi chuyển sang 13, còn 12 không còn nhãn nào.",
+      "vars": { "ten": "'Bit' (str)", "tuoi": "13 (int)" },
+      "actions": [
+        { "type": "highlight", "target": "v-12" },
+        { "type": "move", "actor": "bit", "to": "shelfFront" },
+        { "type": "anim", "actor": "bit", "tag": "work", "after": 1 },
+        { "type": "spawn", "actor": "v-13", "sprite": "box", "at": "ram.3", "after": 1 },
+        { "type": "label", "target": "v-13", "text": "13 · int", "place": "below", "after": 3 },
+        { "type": "set", "key": "tags", "value": [{ "name": "ten", "to": "v-bit", "slot": 0 }, { "name": "tuoi", "to": "v-13", "slot": 1 }], "after": 3 },
+        { "type": "highlight", "target": "v-12", "color": "err", "after": 3 }
+      ]
+    },
+    {
+      "line": 4,
+      "caption": "print in các giá trị theo thứ tự, cách nhau một dấu cách. Nhãn ten cho ra Bit, nhãn tuoi giờ cho ra 13.",
+      "vars": { "ten": "'Bit' (str)", "tuoi": "13 (int)" },
+      "actions": [
+        { "type": "anim", "actor": "bit", "tag": "idle" },
+        { "type": "move", "actor": "bit", "to": "desk" },
+        { "type": "say", "actor": "bit", "text": "Bit 13", "after": 1 },
+        { "type": "highlight", "target": "v-bit" },
+        { "type": "highlight", "target": "v-13" }
+      ]
+    },
+    {
+      "line": 5,
+      "caption": "type() cho biết kiểu của giá trị mà nhãn đang buộc vào. ten là str (chuỗi), tuoi là int (số nguyên).",
+      "vars": { "type(ten)": "str", "type(tuoi)": "int" },
+      "actions": [
+        { "type": "say", "actor": "bit", "text": "<class 'str'> <class 'int'>" },
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "highlight", "target": "v-bit", "color": "a1" },
+        { "type": "highlight", "target": "v-13", "color": "a1" }
+      ]
+    }
+  ]
+}

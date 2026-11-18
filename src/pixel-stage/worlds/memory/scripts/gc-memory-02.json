@@ -1,0 +1,99 @@
+{
+  "id": "gc-memory-02",
+  "world": "memory",
+  "language": "python",
+  "code": "import gc\na = {\"ten\": \"A\"}\nb = {\"ten\": \"B\"}\na[\"ban\"] = b\nb[\"ban\"] = a\ndel a\ndel b      # mỗi hộp vẫn còn 1 dây từ hộp kia\ngc.collect()  # robot GC tìm vòng tham chiếu và dọn",
+  "actors": [
+    { "id": "bit", "sprite": "bit-dev", "at": "desk" },
+    { "id": "robot", "sprite": "robot", "at": "dock" }
+  ],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "Robot GC đang sạc ở góc phòng. Phần lớn hộp được dọn ngay khi hết dây; robot chỉ cần cho những hộp buộc vòng vào nhau.",
+      "actions": [
+        { "type": "set", "key": "charging", "value": true },
+        { "type": "highlight", "target": "robot", "color": "a1" }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "Tạo dict A và buộc nhãn a vào. Hộp A có 1 dây.",
+      "vars": { "a": "{'ten': 'A'}" },
+      "actions": [
+        { "type": "spawn", "actor": "boxA", "sprite": "box", "at": "ram.1" },
+        { "type": "label", "target": "boxA", "text": "dict A", "place": "below" },
+        { "type": "set", "key": "boxes", "value": ["boxA"] },
+        { "type": "set", "key": "tags", "value": [{ "name": "a", "to": "boxA", "slot": 0 }], "after": 0 }
+      ]
+    },
+    {
+      "line": 3,
+      "caption": "Tạo dict B và buộc nhãn b vào. Hộp B cũng có 1 dây.",
+      "vars": { "a": "{'ten': 'A'}", "b": "{'ten': 'B'}" },
+      "actions": [
+        { "type": "spawn", "actor": "boxB", "sprite": "box", "at": "ram.2" },
+        { "type": "label", "target": "boxB", "text": "dict B", "place": "below" },
+        { "type": "set", "key": "boxes", "value": ["boxA", "boxB"] },
+        { "type": "set", "key": "tags", "value": [{ "name": "a", "to": "boxA", "slot": 0 }, { "name": "b", "to": "boxB", "slot": 1 }], "after": 0 }
+      ]
+    },
+    {
+      "line": 4,
+      "caption": "a[\"ban\"] = b: hộp A buộc một dây sang hộp B. B giờ có 2 dây.",
+      "vars": { "a": "{'ten': 'A', 'ban': B}", "b": "{'ten': 'B'}" },
+      "actions": [
+        { "type": "set", "key": "links", "value": [["boxA", "boxB"]] },
+        { "type": "highlight", "target": "boxB" }
+      ]
+    },
+    {
+      "line": 5,
+      "caption": "b[\"ban\"] = a: hộp B buộc ngược lại sang A. Hai hộp tạo thành một vòng tham chiếu.",
+      "vars": { "a": "{'ten': 'A', 'ban': B}", "b": "{'ten': 'B', 'ban': A}" },
+      "actions": [
+        { "type": "set", "key": "links", "value": [["boxA", "boxB"], ["boxB", "boxA"]] },
+        { "type": "highlight", "target": "boxA" }
+      ]
+    },
+    {
+      "line": 6,
+      "caption": "del a gỡ nhãn a. Hộp A vẫn còn 1 dây từ hộp B.",
+      "vars": { "b": "{'ten': 'B', 'ban': A}" },
+      "actions": [
+        { "type": "set", "key": "tags", "value": [{ "name": "b", "to": "boxB", "slot": 1 }] }
+      ]
+    },
+    {
+      "line": 7,
+      "caption": "del b gỡ nốt nhãn b: không còn tên nào trỏ tới hai hộp, nhưng mỗi hộp vẫn còn 1 dây từ hộp kia. Số dây không về 0 nên reference counting không dọn được.",
+      "actions": [
+        { "type": "set", "key": "tags", "value": [] },
+        { "type": "highlight", "target": "boxA", "color": "err" },
+        { "type": "highlight", "target": "boxB", "color": "err" },
+        { "type": "anim", "actor": "bit", "tag": "confused" }
+      ]
+    },
+    {
+      "line": 8,
+      "caption": "gc.collect() chạy bộ GC: nó thấy hai hộp chỉ trỏ vào nhau, từ bên ngoài không còn đường tới, nên dọn cả hai. Đây đúng là việc bộ GC của CPython sinh ra để làm.",
+      "actions": [
+        { "type": "set", "key": "charging", "value": false },
+        { "type": "anim", "actor": "robot", "tag": "work" },
+        { "type": "move", "actor": "robot", "to": "shelfFront", "dur": "lg" },
+        { "type": "say", "actor": "robot", "text": "Vòng rác!", "after": 2 },
+        { "type": "set", "key": "links", "value": [], "after": 2 },
+        { "type": "move", "actor": "boxA", "to": "robot.hand", "after": 3 },
+        { "type": "move", "actor": "boxB", "to": "robot.hand", "after": 3 },
+        { "type": "move", "actor": "robot", "to": "bin", "dur": "lg", "after": 5 },
+        { "type": "move", "actor": "boxA", "to": "bin", "dur": "lg", "after": 5 },
+        { "type": "move", "actor": "boxB", "to": "bin", "dur": "lg", "after": 5 },
+        { "type": "despawn", "actor": "boxA", "fx": "poof", "after": 8 },
+        { "type": "despawn", "actor": "boxB", "fx": "poof", "after": 8 },
+        { "type": "set", "key": "boxes", "value": [], "after": 8 },
+        { "type": "anim", "actor": "robot", "tag": "happy", "after": 8 },
+        { "type": "anim", "actor": "bit", "tag": "happy", "after": 8 }
+      ]
+    }
+  ]
+}

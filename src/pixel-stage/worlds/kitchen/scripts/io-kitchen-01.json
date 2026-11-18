@@ -1,0 +1,53 @@
+{
+  "id": "io-kitchen-01",
+  "world": "kitchen",
+  "language": "python",
+  "code": "mon = input(\"Bạn muốn ăn gì? \")\nso_phan = int(input(\"Mấy phần? \"))\nprint(\"Đã nhận:\", so_phan, \"phần\", mon)",
+  "actors": [{ "id": "bit", "sprite": "bit-chef", "at": "prep" }],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "input() in câu hỏi ra màn hình rồi dừng chương trình lại để chờ người dùng gõ. Khách bước vào, Bit hỏi món.",
+      "actions": [
+        { "type": "set", "key": "light", "value": "on" },
+        { "type": "spawn", "actor": "khach", "sprite": "binh", "at": "door" },
+        { "type": "move", "actor": "khach", "to": "center", "dur": "lg", "after": 1 },
+        { "type": "say", "actor": "bit", "text": "Bạn muốn ăn gì?", "after": 2 }
+      ]
+    },
+    {
+      "line": 1,
+      "caption": "Người dùng gõ Pizza rồi nhấn Enter. input() trả về chuỗi \"Pizza\" và gán vào biến mon.",
+      "vars": { "mon": "'Pizza'" },
+      "actions": [
+        { "type": "say", "actor": "khach", "text": "Pizza" },
+        { "type": "spawn", "actor": "t-mon", "sprite": "ticket", "at": "ticket1", "label": "mon = 'Pizza'", "after": 0 },
+        { "type": "highlight", "target": "t-mon", "after": 1 }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "input() luôn trả về chuỗi, nên khách gõ 2 thì nhận được \"2\" là chữ. int() đổi nó thành số 2 để tính toán được.",
+      "vars": { "mon": "'Pizza'", "so_phan": "2 (int)" },
+      "actions": [
+        { "type": "say", "actor": "bit", "text": "Mấy phần?" },
+        { "type": "say", "actor": "khach", "text": "2", "after": 0 },
+        { "type": "spawn", "actor": "t-so", "sprite": "ticket", "at": "ticket2", "label": "'2' → 2", "after": 1 },
+        { "type": "highlight", "target": "t-so", "after": 2 }
+      ]
+    },
+    {
+      "line": 3,
+      "caption": "print nối các giá trị bằng dấu cách rồi xuống dòng. Bếp ra đúng 2 phần Pizza theo dữ liệu vừa nhập.",
+      "vars": { "mon": "'Pizza'", "so_phan": "2 (int)" },
+      "actions": [
+        { "type": "set", "key": "tray", "value": true },
+        { "type": "move", "actor": "bit", "to": "out1" },
+        { "type": "spawn", "actor": "p1", "sprite": "pizza", "at": "tray.1", "after": 1 },
+        { "type": "spawn", "actor": "p2", "sprite": "pizza", "at": "tray.2", "after": 1 },
+        { "type": "say", "actor": "bit", "text": "Đã nhận: 2 phần Pizza", "after": 1 },
+        { "type": "anim", "actor": "khach", "tag": "happy", "after": 1 }
+      ]
+    }
+  ]
+}

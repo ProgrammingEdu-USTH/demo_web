@@ -1,0 +1,112 @@
+{
+  "id": "loop-dj-01",
+  "world": "dj",
+  "language": "python",
+  "code": "nhip = [\"kick\", \"snare\", \"kick\", \"hat\", \"kick\", \"kick\", \"snare\", \"hat\"]\n\nfor i, am in enumerate(nhip):\n    if am == \"kick\":\n        phat(\"Bùm\")\n    elif am == \"snare\":\n        phat(\"Chát\")\n    else:\n        phat(\"Xì\")\n    if i == 5:\n        break",
+  "actors": [{ "id": "bit", "sprite": "bit-dj", "at": "dj" }],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "nhip là một list 8 phần tử. Mỗi phần tử là một ô của sequencer.",
+      "vars": { "nhip": "[kick, snare, kick, hat, kick, kick, snare, hat]" },
+      "actions": [
+        { "type": "set", "key": "cells", "value": ["kick", "snare", "kick", "hat", "kick", "kick", "snare", "hat"] },
+        { "type": "highlight", "target": "cell0" },
+        { "type": "highlight", "target": "cell7" }
+      ]
+    },
+    {
+      "line": [3, 4, 5, 10],
+      "caption": "Vòng 1: i = 0, am = \"kick\". if đúng nên tín hiệu rẽ sang loa trầm: Bùm.",
+      "vars": { "i": "0", "am": "'kick'" },
+      "actions": [
+        { "type": "spawn", "actor": "head", "sprite": "head", "at": "head0" },
+        { "type": "set", "key": "played", "value": [0] },
+        { "type": "set", "key": "branch", "value": "kick" },
+        { "type": "sound", "name": "kick" },
+        { "type": "say", "actor": "kick", "text": "Bùm" },
+        { "type": "emit", "at": "kick", "fx": "note" },
+        { "type": "anim", "actor": "bit", "tag": "work" }
+      ]
+    },
+    {
+      "line": [3, 4, 6, 7, 10],
+      "caption": "i = 1, am = \"snare\": if sai, elif đúng nên tín hiệu sang trống: Chát.",
+      "vars": { "i": "1", "am": "'snare'" },
+      "actions": [
+        { "type": "move", "actor": "head", "to": "head1", "dur": "sm" },
+        { "type": "set", "key": "played", "value": [0, 1], "after": 0 },
+        { "type": "set", "key": "branch", "value": "snare", "after": 0 },
+        { "type": "sound", "name": "snare", "after": 0 },
+        { "type": "say", "actor": "snare", "text": "Chát", "after": 0 },
+        { "type": "emit", "at": "snare", "fx": "note", "after": 0 }
+      ]
+    },
+    {
+      "line": [3, 4, 5, 10],
+      "caption": "i = 2, am = \"kick\": lại rẽ sang loa trầm.",
+      "vars": { "i": "2", "am": "'kick'" },
+      "actions": [
+        { "type": "move", "actor": "head", "to": "head2", "dur": "sm" },
+        { "type": "set", "key": "played", "value": [0, 1, 2], "after": 0 },
+        { "type": "set", "key": "branch", "value": "kick", "after": 0 },
+        { "type": "sound", "name": "kick", "after": 0 },
+        { "type": "say", "actor": "kick", "text": "Bùm", "after": 0 },
+        { "type": "emit", "at": "kick", "fx": "note", "after": 0 }
+      ]
+    },
+    {
+      "line": [3, 4, 6, 8, 9, 10],
+      "caption": "i = 3, am = \"hat\": không phải kick cũng không phải snare nên rơi vào else. Hi-hat kêu Xì.",
+      "vars": { "i": "3", "am": "'hat'" },
+      "actions": [
+        { "type": "move", "actor": "head", "to": "head3", "dur": "sm" },
+        { "type": "set", "key": "played", "value": [0, 1, 2, 3], "after": 0 },
+        { "type": "set", "key": "branch", "value": "hat", "after": 0 },
+        { "type": "sound", "name": "hat", "after": 0 },
+        { "type": "say", "actor": "hat", "text": "Xì", "after": 0 },
+        { "type": "emit", "at": "hat", "fx": "note", "after": 0 }
+      ]
+    },
+    {
+      "line": [3, 4, 5, 10],
+      "caption": "i = 4, am = \"kick\": loa trầm. i chưa bằng 5 nên vòng lặp chạy tiếp.",
+      "vars": { "i": "4", "am": "'kick'" },
+      "actions": [
+        { "type": "move", "actor": "head", "to": "head4", "dur": "sm" },
+        { "type": "set", "key": "played", "value": [0, 1, 2, 3, 4], "after": 0 },
+        { "type": "set", "key": "branch", "value": "kick", "after": 0 },
+        { "type": "sound", "name": "kick", "after": 0 },
+        { "type": "say", "actor": "kick", "text": "Bùm", "after": 0 },
+        { "type": "emit", "at": "kick", "fx": "note", "after": 0 }
+      ]
+    },
+    {
+      "line": [3, 4, 5, 10],
+      "caption": "i = 5, am = \"kick\": loa trầm kêu Bùm. Sau đó điều kiện i == 5 đúng.",
+      "vars": { "i": "5", "am": "'kick'" },
+      "actions": [
+        { "type": "move", "actor": "head", "to": "head5", "dur": "sm" },
+        { "type": "set", "key": "played", "value": [0, 1, 2, 3, 4, 5], "after": 0 },
+        { "type": "set", "key": "branch", "value": "kick", "after": 0 },
+        { "type": "sound", "name": "kick", "after": 0 },
+        { "type": "say", "actor": "kick", "text": "Bùm", "after": 0 },
+        { "type": "emit", "at": "kick", "fx": "note", "after": 0 }
+      ]
+    },
+    {
+      "line": [10, 11],
+      "caption": "break thoát khỏi vòng lặp ngay: DJ đập nút STOP, đầu phát dừng ở ô i = 5. Hai ô cuối không bao giờ được phát.",
+      "vars": { "i": "5", "am": "'kick'" },
+      "actions": [
+        { "type": "set", "key": "branch", "value": null },
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "set", "key": "stop", "value": true },
+        { "type": "say", "actor": "bit", "text": "STOP!" },
+        { "type": "highlight", "target": "stop", "color": "a3" },
+        { "type": "highlight", "target": "cell6", "color": "err" },
+        { "type": "highlight", "target": "cell7", "color": "err" }
+      ]
+    }
+  ]
+}

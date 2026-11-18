@@ -1,0 +1,6 @@
+/* Trang demo: <StepPlayer /> phủ toàn cửa sổ; màu nằm trong StepPlayer (tokens/ui.ts). */
+.root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}

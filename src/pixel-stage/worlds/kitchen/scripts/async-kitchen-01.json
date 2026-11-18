@@ -1,0 +1,119 @@
+{
+  "id": "async-kitchen-01",
+  "world": "kitchen",
+  "language": "python",
+  "code": "import asyncio\n\nasync def nuong(mon, giay):\n    print(f\"Cho {mon} vào lò\")\n    await asyncio.sleep(giay)\n    print(f\"{mon} xong!\")\n    return mon\n\nasync def main():\n    ket_qua = await asyncio.gather(\n        nuong(\"Pizza\", 3),\n        nuong(\"Bánh mì\", 1),\n    )\n    print(ket_qua)\n\nasyncio.run(main())",
+  "actors": [{ "id": "cook", "sprite": "cook", "at": "prep" }],
+  "steps": [
+    {
+      "line": 16,
+      "caption": "asyncio.run(main()) khởi động event loop. Bếp trưởng Bit vào ca và bật đèn bếp.",
+      "actions": [
+        { "type": "spawn", "actor": "bit", "sprite": "bit-chef", "at": "door" },
+        { "type": "move", "actor": "bit", "to": "center", "dur": "lg", "after": 0 },
+        { "type": "set", "key": "light", "value": "on", "after": 1 },
+        { "type": "say", "actor": "bit", "text": "Mở bếp!", "after": 1 }
+      ]
+    },
+    {
+      "line": [10, 13],
+      "caption": "gather nhận hai coroutine, mỗi món là một ticket treo trên ray. Khay ra món có sẵn 2 ô, đánh số theo thứ tự gọi.",
+      "actions": [
+        { "type": "spawn", "actor": "t-pizza", "sprite": "ticket", "at": "ticket1", "label": "Pizza 3s" },
+        { "type": "spawn", "actor": "t-banh", "sprite": "ticket", "at": "ticket2", "label": "Bánh mì 1s" },
+        { "type": "set", "key": "tray", "value": true },
+        { "type": "highlight", "target": "tray" }
+      ]
+    },
+    {
+      "line": 4,
+      "caption": "Coroutine Pizza chạy trước: đầu bếp lấy ticket Pizza và cho bánh vào lò 1.",
+      "vars": { "mon": "'Pizza'", "giay": "3" },
+      "actions": [
+        { "type": "move", "actor": "cook", "to": "rail" },
+        { "type": "highlight", "target": "t-pizza", "after": 0 },
+        { "type": "spawn", "actor": "pizza", "sprite": "pizza", "at": "cook.hand", "after": 0 },
+        { "type": "move", "actor": "cook", "to": "oven1", "after": 2 },
+        { "type": "move", "actor": "pizza", "to": "oven1.in", "after": 2 },
+        { "type": "say", "actor": "cook", "text": "Cho Pizza vào lò", "after": 3 },
+        { "type": "anim", "actor": "cook", "tag": "work", "after": 3 }
+      ]
+    },
+    {
+      "line": 5,
+      "caption": "await asyncio.sleep(3): Pizza cần 3 giây trong lò. Đầu bếp không đứng chờ mà nhường bếp, quay lại ray lấy việc khác.",
+      "vars": { "mon": "'Pizza'", "giay": "3" },
+      "actions": [
+        { "type": "timer", "at": "oven1", "seconds": 3 },
+        { "type": "set", "key": "oven1", "value": "on" },
+        { "type": "anim", "actor": "cook", "tag": "idle" },
+        { "type": "say", "actor": "cook", "text": "Không đứng chờ!", "after": 0 },
+        { "type": "move", "actor": "cook", "to": "rail", "after": 3 },
+        { "type": "move", "actor": "bit", "to": "look1", "after": 0 }
+      ]
+    },
+    {
+      "line": [4, 5],
+      "caption": "Event loop chuyển sang coroutine Bánh mì. Bánh mì vào lò 2 với 1 giây, giờ cả hai lò cùng nướng.",
+      "vars": { "mon": "'Bánh mì'", "giay": "1" },
+      "actions": [
+        { "type": "highlight", "target": "t-banh" },
+        { "type": "spawn", "actor": "bread", "sprite": "bread", "at": "cook.hand" },
+        { "type": "move", "actor": "cook", "to": "oven2", "after": 1 },
+        { "type": "move", "actor": "bread", "to": "oven2.in", "after": 1 },
+        { "type": "timer", "at": "oven2", "seconds": 1, "after": 2 },
+        { "type": "set", "key": "oven2", "value": "on", "after": 2 },
+        { "type": "say", "actor": "cook", "text": "Cho Bánh mì vào lò", "after": 2 },
+        { "type": "move", "actor": "cook", "to": "prep", "after": 6 }
+      ]
+    },
+    {
+      "line": [6, 7],
+      "caption": "Sau 1 giây lò 2 kêu “ding” trước: in “Bánh mì xong!” rồi return. Kết quả vào ô số 2 vì Bánh mì là coroutine thứ hai trong gather.",
+      "vars": { "mon": "'Bánh mì'", "return": "'Bánh mì'" },
+      "actions": [
+        { "type": "timer", "at": "oven1", "seconds": 2 },
+        { "type": "timer", "at": "oven2", "seconds": 0 },
+        { "type": "set", "key": "oven2", "value": "off" },
+        { "type": "emit", "at": "oven2.vent", "fx": "spark" },
+        { "type": "say", "actor": "oven2", "text": "Ding!" },
+        { "type": "move", "actor": "bit", "to": "look2" },
+        { "type": "move", "actor": "cook", "to": "oven2" },
+        { "type": "move", "actor": "cook", "to": "tray", "after": 6 },
+        { "type": "move", "actor": "bread", "to": "tray.2", "after": 6 },
+        { "type": "say", "actor": "cook", "text": "Bánh mì xong!", "after": 7 },
+        { "type": "despawn", "actor": "t-banh", "fx": "fade", "after": 7 }
+      ]
+    },
+    {
+      "line": [6, 7],
+      "caption": "Hai giây sau lò 1 kêu “ding”, Pizza xong và vào ô số 1. Món xong sau vẫn nằm đúng ô theo thứ tự gọi.",
+      "vars": { "mon": "'Pizza'", "return": "'Pizza'" },
+      "actions": [
+        { "type": "timer", "at": "oven1", "seconds": 0 },
+        { "type": "set", "key": "oven1", "value": "off" },
+        { "type": "emit", "at": "oven1.vent", "fx": "spark" },
+        { "type": "say", "actor": "oven1", "text": "Ding!" },
+        { "type": "move", "actor": "bit", "to": "look1" },
+        { "type": "move", "actor": "cook", "to": "oven1", "dur": "lg" },
+        { "type": "move", "actor": "cook", "to": "tray", "dur": "lg", "after": 5 },
+        { "type": "move", "actor": "pizza", "to": "tray.1", "dur": "lg", "after": 5 },
+        { "type": "say", "actor": "cook", "text": "Pizza xong!", "after": 6 },
+        { "type": "despawn", "actor": "t-pizza", "fx": "fade", "after": 6 }
+      ]
+    },
+    {
+      "line": 14,
+      "caption": "gather trả về ['Pizza', 'Bánh mì'] theo thứ tự gọi, không theo thứ tự xong. Tổng thời gian khoảng 3 giây chứ không phải 4 giây, vì hai món nướng cùng lúc.",
+      "vars": { "ket_qua": "['Pizza', 'Bánh mì']" },
+      "actions": [
+        { "type": "label", "target": "tray", "text": "['Pizza', 'Bánh mì']", "place": "above" },
+        { "type": "highlight", "target": "tray", "color": "ok" },
+        { "type": "anim", "actor": "cook", "tag": "happy" },
+        { "type": "anim", "actor": "bit", "tag": "happy" },
+        { "type": "emit", "at": "tray.top", "fx": "spark", "n": 10 },
+        { "type": "say", "actor": "bit", "text": "Chỉ mất 3s!" }
+      ]
+    }
+  ]
+}

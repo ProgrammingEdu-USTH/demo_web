@@ -1,0 +1,59 @@
+{
+  "id": "dict-dungeon-01",
+  "world": "dungeon",
+  "language": "python",
+  "code": "quai = {\"ten\": \"Slime\", \"mau\": 10}\nprint(quai[\"ten\"])\nquai[\"mau\"] = quai[\"mau\"] - 3\nquai[\"trang_thai\"] = \"duoi_theo\"\nprint(len(quai), quai[\"mau\"])",
+  "actors": [{ "id": "bit", "sprite": "bit-hero", "at": "hero" }],
+  "steps": [
+    {
+      "line": 1,
+      "caption": "dict lưu các cặp khóa: giá trị trong dấu ngoặc nhọn. Con quái quai có hai khóa là \"ten\" và \"mau\".",
+      "vars": { "quai": "{'ten': 'Slime', 'mau': 10}" },
+      "actions": [
+        { "type": "set", "key": "portal", "value": true },
+        { "type": "spawn", "actor": "quai", "sprite": "slime", "at": "portal", "after": 0 },
+        { "type": "move", "actor": "quai", "to": "s1spot", "after": 1 },
+        { "type": "label", "target": "quai", "text": "'ten': 'Slime'\n'mau': 10", "place": "above", "after": 2 }
+      ]
+    },
+    {
+      "line": 2,
+      "caption": "quai[\"ten\"] tra theo khóa \"ten\" và lấy ra \"Slime\". dict tra bằng tên khóa chứ không bằng vị trí như list.",
+      "vars": { "quai[\"ten\"]": "'Slime'" },
+      "actions": [
+        { "type": "highlight", "target": "quai" },
+        { "type": "say", "actor": "bit", "text": "Slime" }
+      ]
+    },
+    {
+      "line": 3,
+      "caption": "Đọc quai[\"mau\"] được 10, trừ 3 rồi ghi lại vào chính khóa đó. Máu của quái còn 7.",
+      "vars": { "quai[\"mau\"]": "7" },
+      "actions": [
+        { "type": "anim", "actor": "bit", "tag": "work" },
+        { "type": "emit", "at": "quai", "fx": "spark" },
+        { "type": "label", "target": "quai", "text": "'ten': 'Slime'\n'mau': 7", "place": "above", "after": 1 }
+      ]
+    },
+    {
+      "line": 4,
+      "caption": "Gán vào một khóa chưa có là thêm cặp mới. quai giờ có thêm khóa \"trang_thai\" với giá trị \"duoi_theo\".",
+      "vars": { "quai": "{'ten': 'Slime', 'mau': 7, 'trang_thai': 'duoi_theo'}" },
+      "actions": [
+        { "type": "anim", "actor": "bit", "tag": "idle" },
+        { "type": "label", "target": "quai", "text": "'ten': 'Slime'\n'mau': 7\n'trang_thai': 'duoi_theo'", "place": "above" },
+        { "type": "highlight", "target": "quai", "color": "a4" },
+        { "type": "emit", "at": "quai", "fx": "dust" }
+      ]
+    },
+    {
+      "line": 5,
+      "caption": "len(quai) đếm số khóa nên ra 3, còn quai[\"mau\"] là 7. print in hai số này.",
+      "vars": { "len(quai)": "3", "quai[\"mau\"]": "7" },
+      "actions": [
+        { "type": "say", "actor": "bit", "text": "3 7" },
+        { "type": "anim", "actor": "bit", "tag": "happy" }
+      ]
+    }
+  ]
+}

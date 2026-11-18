@@ -1,0 +1,767 @@
+/* Màn "chạy từng dòng" toàn cảnh. Màu và thời lượng lấy từ tokens/ui.ts qua biến --ps-* (đặt inline ở StepPlayer.tsx),
+   không ghi mã màu hay số ms ở đây. --ps-p (tiến độ bước) và --ps-total (tiến độ cả bài) được cập nhật mỗi khung. */
+
+.player {
+  --glass: color-mix(in srgb, var(--ps-panel) 86%, transparent);
+  --glass-strong: color-mix(in srgb, var(--ps-panel) 96%, transparent);
+  --shadow: 0 3px 0 color-mix(in srgb, var(--ps-bg) 70%, transparent);
+  --ease: cubic-bezier(0.37, 0, 0.63, 1); /* ease.move: sine in-out */
+  --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1); /* ease.pop: back-out nhẹ */
+  --ps-p: 0;
+  --ps-total: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--ps-bg);
+  color: var(--ps-text);
+  font-family: var(--f-body), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.player[data-idle="true"] {
+  cursor: none;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  z-index: 0;
+}
+
+/* ───────── nút chung ───────── */
+.btn {
+  min-width: 34px;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--ps-panel2);
+  border: 2px solid var(--ps-line);
+  border-radius: 4px;
+  color: var(--ps-text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 0 var(--ps-bg);
+  transition: transform var(--ps-dur-xs) var(--ease), background var(--ps-dur-xs), border-color var(--ps-dur-xs);
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--ps-mid);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.btn[aria-pressed="true"],
+.btn[aria-expanded="true"] {
+  background: var(--ps-accent);
+  border-color: var(--ps-accent);
+  color: var(--ps-bg);
+  font-weight: 700;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.player :focus-visible {
+  outline: 2px solid var(--ps-accent);
+  outline-offset: 2px;
+}
+
+/* ───────── thanh trên ───────── */
+.top {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px 16px;
+  padding: 14px 18px 28px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--ps-bg) 72%, transparent), transparent);
+  pointer-events: none;
+  animation: hudDown var(--ps-dur-md) var(--ease) both;
+}
+
+.top > * {
+  pointer-events: auto;
+}
+
+.left,
+.right {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.right {
+  justify-content: flex-end;
+}
+
+.center {
+  flex: 0 1 820px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ps-accent);
+  line-height: 1.3;
+  text-shadow: 0 2px 0 var(--ps-bg);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.close {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+}
+
+/* chuyển bài trong khóa */
+.nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  background: var(--glass);
+  border: 2px solid var(--ps-line);
+  border-radius: 6px;
+}
+
+.navLabel {
+  min-width: 64px;
+  padding: 0 4px;
+  color: var(--ps-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.navNext[data-hot="true"] {
+  background: var(--ps-accent);
+  border-color: var(--ps-accent);
+  color: var(--ps-bg);
+  font-weight: 700;
+  animation: pulse calc(var(--ps-dur-lg) * 2) var(--ease) infinite;
+}
+
+/* chọn bài mẫu (toolbar của trang demo) dùng chung kiểu */
+.left select {
+  height: 34px;
+  max-width: 100%;
+  padding: 0 8px;
+  background: var(--glass-strong);
+  color: var(--ps-text);
+  border: 2px solid var(--ps-line);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 14px;
+}
+
+/* ───────── dòng code đang chạy ───────── */
+.codeLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-height: 46px;
+  padding: 8px 16px 8px 12px;
+  background: var(--glass-strong);
+  border: 2px solid var(--ps-line);
+  border-left: 4px solid var(--ps-accent);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+  color: var(--ps-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  animation: codeIn var(--ps-dur-sm) var(--ease-pop) both;
+}
+
+.codeLine:hover {
+  border-color: var(--ps-mid);
+  border-left-color: var(--ps-accent);
+}
+
+.ctx {
+  flex: 0 1 auto;
+  max-width: 34%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--ps-muted);
+  opacity: 0.8;
+}
+
+.ln {
+  flex: none;
+  padding: 2px 7px;
+  background: var(--ps-accent);
+  color: var(--ps-bg);
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.src {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 16px;
+  white-space: pre;
+  mask-image: linear-gradient(to right, var(--ps-bg) 92%, transparent);
+}
+
+/* "gõ" từng ký tự: cắt dần từ phải sang trái theo số ký tự (--n), không phụ thuộc độ rộng font */
+.typed {
+  display: inline-block;
+  animation: type var(--type) steps(var(--n), end) both;
+}
+
+.caret {
+  display: inline-block;
+  flex: none;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 2px;
+  background: var(--ps-accent);
+  opacity: 0;
+  animation: caret var(--ps-dur-lg) steps(2, jump-none) var(--type) 3;
+}
+
+.more {
+  flex: none;
+  padding: 1px 7px;
+  border: 1px solid var(--ps-line);
+  border-radius: 999px;
+  color: var(--ps-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.hint {
+  margin: 0;
+  padding: 8px 16px;
+  background: var(--glass);
+  border: 2px dashed var(--ps-line);
+  border-radius: 6px;
+  color: var(--ps-muted);
+  font-size: 14px;
+  text-align: center;
+  animation: fadeIn var(--ps-dur-lg) var(--ease) both;
+}
+
+.hint b {
+  color: var(--ps-accent);
+}
+
+.hint kbd {
+  padding: 0 5px;
+  border: 1px solid var(--ps-line);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.error {
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--glass-strong);
+  border-left: 3px solid var(--ps-err);
+  border-radius: 4px;
+}
+
+/* tô cú pháp */
+.kw { color: var(--ps-kw); font-weight: 600; }
+.str { color: var(--ps-str); }
+.num { color: var(--ps-num); }
+.com { color: var(--ps-com); font-style: italic; }
+.fn { color: var(--ps-fn); }
+.bi { color: var(--ps-bi); }
+
+/* ───────── nút Chạy ───────── */
+.run {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 20px 0 16px;
+  overflow: hidden;
+  background: var(--ps-accent);
+  border: 2px solid var(--ps-bg);
+  border-radius: 6px;
+  color: var(--ps-bg);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--ps-accent2), 0 6px 0 var(--ps-bg);
+  transition: transform var(--ps-dur-xs) var(--ease), box-shadow var(--ps-dur-xs) var(--ease), background var(--ps-dur-sm), color var(--ps-dur-sm);
+}
+
+.run:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.run:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ps-accent2), 0 3px 0 var(--ps-bg);
+}
+
+.run:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* nền đầy dần theo tiến độ cả bài */
+.runFill {
+  position: absolute;
+  inset: 0;
+  background: var(--ps-accent2);
+  transform: scaleX(var(--ps-total));
+  transform-origin: left;
+  opacity: 0.55;
+}
+
+.run[aria-pressed="true"] {
+  background: var(--ps-panel2);
+  color: var(--ps-accent);
+  border-color: var(--ps-accent);
+  box-shadow: 0 4px 0 var(--ps-line), 0 6px 0 var(--ps-bg);
+}
+
+.run[aria-pressed="true"] .runFill {
+  background: var(--ps-accent);
+  opacity: 0.22;
+}
+
+.runIcon,
+.runText {
+  position: relative;
+}
+
+.runIcon {
+  font-size: 13px;
+}
+
+/* chưa tương tác: nút Chạy "thở" nhẹ để gợi ý */
+.player:not([data-revealed="true"]) .run:not(:disabled) {
+  animation: pulse calc(var(--ps-dur-lg) * 2) var(--ease) infinite;
+}
+
+/* ───────── phía dưới ───────── */
+.bottom {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 16px 16px;
+  background: linear-gradient(to top, color-mix(in srgb, var(--ps-bg) 72%, transparent), transparent);
+  pointer-events: none;
+  animation: hudUp var(--ps-dur-md) var(--ease) both;
+}
+
+.bottom > * {
+  pointer-events: auto;
+}
+
+.vars {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vars li {
+  padding: 3px 10px;
+  background: var(--glass);
+  border: 1px solid var(--ps-line);
+  border-radius: 4px;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 13px;
+  animation: fadeIn var(--ps-dur-sm) var(--ease) both;
+}
+
+.vars b {
+  color: var(--ps-accent);
+  font-weight: 500;
+}
+
+.caption {
+  max-width: min(860px, 100%);
+  margin: 0;
+  padding: 10px 20px;
+  background: var(--glass-strong);
+  border: 2px solid var(--ps-line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  font-size: clamp(15px, 1.25vw, 18px);
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.caption[data-empty="true"] {
+  visibility: hidden;
+}
+
+.capText {
+  display: block;
+  animation: fadeUp var(--ps-dur-sm) var(--ease) both;
+}
+
+.controls {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--glass);
+  border: 2px solid var(--ps-line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
+  transition: opacity var(--ps-dur-md) var(--ease), transform var(--ps-dur-md) var(--ease);
+}
+
+.player[data-idle="true"] .controls {
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+}
+
+.count {
+  min-width: 78px;
+  color: var(--ps-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.sep {
+  width: 2px;
+  height: 22px;
+  margin: 0 4px;
+  background: var(--ps-line);
+}
+
+.seg {
+  display: inline-flex;
+  gap: 2px;
+}
+
+/* các ô bước: đã qua / đang chạy (đầy dần theo --ps-p) / chưa tới */
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 46vw;
+}
+
+.dot {
+  flex: 0 1 24px;
+  min-width: 8px;
+  height: 26px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.dot > span {
+  position: relative;
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  background: var(--ps-panel2);
+  border: 1px solid var(--ps-line);
+  border-radius: 2px;
+}
+
+.dot > span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ps-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.dot[data-state="done"] > span::after {
+  transform: scaleX(1);
+  opacity: 0.7;
+}
+
+.dot[data-state="now"] > span {
+  border-color: var(--ps-accent);
+}
+
+.dot[data-state="now"] > span::after {
+  transform: scaleX(var(--ps-p));
+}
+
+.dot:hover > span {
+  border-color: var(--ps-mid);
+}
+
+.popWrap {
+  position: relative;
+}
+
+.pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  display: grid;
+  gap: 10px;
+  width: max-content;
+  max-width: 80vw;
+  padding: 12px 14px;
+  background: var(--glass-strong);
+  border: 2px solid var(--ps-line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  animation: fadeUp var(--ps-dur-sm) var(--ease) both;
+}
+
+.field,
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ps-muted);
+  font-size: 14px;
+}
+
+.field select {
+  padding: 4px 8px;
+  background: var(--ps-panel2);
+  color: var(--ps-text);
+  border: 1px solid var(--ps-line);
+  border-radius: 4px;
+  font: inherit;
+}
+
+.check input {
+  accent-color: var(--ps-accent);
+}
+
+.keys,
+.muted {
+  margin: 0;
+  color: var(--ps-muted);
+  font-size: 13px;
+}
+
+/* ───────── ngăn kéo: toàn bộ code ───────── */
+.drawer {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 2;
+  width: min(440px, 92vw);
+  padding: 92px 16px 20px;
+  overflow: auto;
+  background: var(--glass-strong);
+  border-left: 2px solid var(--ps-line);
+  backdrop-filter: blur(8px);
+  transform: translateX(102%);
+  transition: transform var(--ps-dur-md) var(--ease);
+}
+
+.drawer[data-open="true"] {
+  transform: none;
+}
+
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--ps-accent);
+}
+
+.drawerHead .h3 {
+  margin: 0;
+}
+
+.code {
+  margin: 0 0 20px;
+  padding: 10px 0;
+  background: var(--ps-bg);
+  border: 1px solid var(--ps-line);
+  border-radius: 6px;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.line {
+  display: block;
+  padding: 0 14px 0 0;
+  border-left: 3px solid transparent;
+  white-space: pre;
+  transition: background var(--ps-dur-sm) var(--ease);
+}
+
+.on {
+  background: color-mix(in srgb, var(--ps-accent) 18%, transparent);
+  border-left-color: var(--ps-accent);
+}
+
+.no {
+  display: inline-block;
+  width: 2.6em;
+  padding-right: 0.9em;
+  text-align: right;
+  color: var(--ps-muted);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.varTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 14px;
+}
+
+.varTable th,
+.varTable td {
+  padding: 6px 10px;
+  border: 1px solid var(--ps-line);
+  text-align: left;
+}
+
+.varTable th {
+  width: 40%;
+  color: var(--ps-accent);
+  font-weight: 500;
+  background: var(--ps-panel2);
+}
+
+/* ───────── màn hẹp ───────── */
+@media (max-width: 860px) {
+  .top {
+    flex-wrap: wrap;
+    padding: 10px 12px 20px;
+  }
+  .center {
+    order: 3;
+    flex: 1 1 100%;
+  }
+  .ctx {
+    display: none;
+  }
+  .src {
+    font-size: 14px;
+  }
+  .run {
+    height: 40px;
+    padding: 0 14px 0 12px;
+    font-size: 15px;
+  }
+  .drawer {
+    padding-top: 128px;
+  }
+  .sep,
+  .count {
+    display: none;
+  }
+  .dots {
+    max-width: 100%;
+    flex: 1 1 100%;
+    order: -1;
+  }
+}
+
+/* ───────── chuyển động ───────── */
+@keyframes hudDown {
+  from { opacity: 0; transform: translateY(-14px); }
+}
+
+@keyframes hudUp {
+  from { opacity: 0; transform: translateY(14px); }
+}
+
+@keyframes codeIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+
+@keyframes type {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes caret {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 4px 0 var(--ps-accent2), 0 6px 0 var(--ps-bg), 0 0 0 0 color-mix(in srgb, var(--ps-accent) 55%, transparent); }
+  50% { box-shadow: 0 4px 0 var(--ps-accent2), 0 6px 0 var(--ps-bg), 0 0 0 8px color-mix(in srgb, var(--ps-accent) 0%, transparent); }
+}
+
+/* giảm chuyển động: data-rm do engine báo (theo prefers-reduced-motion hoặc công tắc của trang),
+   nên giao diện và cảnh luôn cùng một chế độ */
+.player[data-rm="true"] *,
+.player[data-rm="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
