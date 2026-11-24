@@ -1,0 +1,18 @@
+-- BE12 (20/11/2026): số điện thoại duy nhất.
+--
+-- Vì sao: users.phone không có ràng buộc. register() kiểm trùng bằng findFirst rồi mới create nên
+-- hai request đồng thời cùng số đều tạo được tài khoản, và login chọn bằng findFirst({ OR }) không
+-- có orderBy nên có thể vào nhầm tài khoản.
+--
+-- KIỂM TRƯỚC KHI CHẠY (phải ra 0 dòng, nếu không CREATE UNIQUE INDEX thất bại; xử lý tay trước):
+--   SELECT phone, count(*) FROM users WHERE phone IS NOT NULL GROUP BY 1 HAVING count(*) > 1;
+--   -- chuỗi rỗng cũng tính là một giá trị: bản Django có thể để '' thay vì NULL
+--   SELECT count(*) FROM users WHERE phone = '';   -- >1 dòng thì UPDATE users SET phone = NULL WHERE phone = '' trước
+-- Tham khảo (không sửa ở đây): SELECT count(*) FROM users WHERE email <> lower(email);
+--   email cũ có chữ hoa sẽ không khớp tra cứu chữ thường của login.
+--
+-- Chỉ THÊM một chỉ mục; không đụng dữ liệu. Chỉ mục thường chứ không phải từng phần (WHERE phone IS
+-- NOT NULL) vì Postgres đã cho phép nhiều NULL, và schema.prisma không biểu diễn được chỉ mục từng
+-- phần nên `migrate diff` sẽ báo lệch mãi.
+-- Hoàn tác: DROP INDEX IF EXISTS uq_users_phone;
+CREATE UNIQUE INDEX IF NOT EXISTS "uq_users_phone" ON "users"("phone");

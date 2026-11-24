@@ -1,0 +1,33 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+# Prisma client sinh ra bởi `prisma generate` (`npm run build` tự chạy qua prebuild)
+/src/generated/prisma
+
+# Tài khoản đo tải do `npm run loadtest:prepare` sinh ra
+/scripts/loadtest-accounts.json
+
+__pycache__/
+coverage/
+
+.claude
+
+.windsurf
+
+.agents
+
+dist/
+
+python-studio-qa/
+
+# Nhat ky sua chua noi bo, khong day len git
+NHAT-KY-SUA.md
+
+# CPython 3.12 + đúng phiên bản numpy/pandas/matplotlib của Pyodide 0.27.7, để
+# scripts/pe-v4/build.py chấm thử lúc dựng giống trình duyệt (xem README pe-v4)
+/scripts/pe-v4/.venv/
+
+# Sao lưu DB cục bộ (có thể chứa dữ liệu người dùng) — không commit
+backups/
+*.dump

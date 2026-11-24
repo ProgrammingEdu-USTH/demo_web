@@ -1,0 +1,56 @@
+[
+  {
+    "name": "sA_bg_memory",
+    "bg": true,
+    "style": "soft 3D clay toy render, like handmade plasticine miniatures, chunky rounded shapes, smooth matte surfaces with subtle subsurface glow, NO outlines, bright cheerful DAYTIME lighting with soft ambient occlusion, fresh pastel palette (mint, peach, butter yellow, sky blue, soft lavender), high clarity.",
+    "prompt": "interior of a small cozy grocery storeroom in the daytime; back wall with a high wooden shelf holding a few jars and books on the upper left, a window or lamp light source on the left, lower wall panels, wooden floor filling only the bottom 22 percent of the image; the whole center and lower-middle of the wall is completely empty (no table, no furniture, no boxes)."
+  },
+  {
+    "name": "sA_drawer",
+    "bg": false,
+    "style": "soft 3D clay toy render, like handmade plasticine miniatures, chunky rounded shapes, smooth matte surfaces with subtle subsurface glow, NO outlines, bright cheerful DAYTIME lighting with soft ambient occlusion, fresh pastel palette (mint, peach, butter yellow, sky blue, soft lavender), high clarity.",
+    "prompt": "a single cute wooden storage drawer cabinet with one closed drawer, a cup handle, a small blank label holder on the drawer front."
+  },
+  {
+    "name": "sA_bit",
+    "bg": false,
+    "style": "soft 3D clay toy render, like handmade plasticine miniatures, chunky rounded shapes, smooth matte surfaces with subtle subsurface glow, NO outlines, bright cheerful DAYTIME lighting with soft ambient occlusion, fresh pastel palette (mint, peach, butter yellow, sky blue, soft lavender), high clarity.",
+    "prompt": "character sprite sheet of the SAME cute chibi kid mascot named Bit (big head, short brown hair, round eyes, teal shirt, brown shop apron) shown 4 times in a single horizontal row with equal spacing, full body, facing the viewer: pose 1 standing relaxed, pose 2 both arms raised working, pose 3 jumping happily, pose 4 dizzy and worried. Same size and same outfit in every pose. Wide 4:1 image instead of square."
+  },
+  {
+    "name": "sB_bg_memory",
+    "bg": true,
+    "style": "minimal flat vector illustration with NO outlines, clean geometric shapes, bold solid color fills with at most one subtle shade per shape, vivid saturated high-contrast palette (coral, teal, sunny yellow, royal blue, warm white), bright DAYTIME, very clean and readable at small size, modern educational infographic look.",
+    "prompt": "interior of a small cozy grocery storeroom in the daytime; back wall with a high wooden shelf holding a few jars and books on the upper left, a window or lamp light source on the left, lower wall panels, wooden floor filling only the bottom 22 percent of the image; the whole center and lower-middle of the wall is completely empty (no table, no furniture, no boxes)."
+  },
+  {
+    "name": "sB_drawer",
+    "bg": false,
+    "style": "minimal flat vector illustration with NO outlines, clean geometric shapes, bold solid color fills with at most one subtle shade per shape, vivid saturated high-contrast palette (coral, teal, sunny yellow, royal blue, warm white), bright DAYTIME, very clean and readable at small size, modern educational infographic look.",
+    "prompt": "a single cute wooden storage drawer cabinet with one closed drawer, a cup handle, a small blank label holder on the drawer front."
+  },
+  {
+    "name": "sB_bit",
+    "bg": false,
+    "style": "minimal flat vector illustration with NO outlines, clean geometric shapes, bold solid color fills with at most one subtle shade per shape, vivid saturated high-contrast palette (coral, teal, sunny yellow, royal blue, warm white), bright DAYTIME, very clean and readable at small size, modern educational infographic look.",
+    "prompt": "character sprite sheet of the SAME cute chibi kid mascot named Bit (big head, short brown hair, round eyes, teal shirt, brown shop apron) shown 4 times in a single horizontal row with equal spacing, full body, facing the viewer: pose 1 standing relaxed, pose 2 both arms raised working, pose 3 jumping happily, pose 4 dizzy and worried. Same size and same outfit in every pose. Wide 4:1 image instead of square."
+  },
+  {
+    "name": "sC_bg_memory",
+    "bg": true,
+    "style": "hand-painted storybook illustration in gouache and watercolor, visible soft brush texture and paper grain, gentle thin colored-pencil outlines, warm golden MORNING sunlight from a window on the left, cozy but bright, soft natural palette (honey, sage green, cream, terracotta, dusty blue).",
+    "prompt": "interior of a small cozy grocery storeroom in the daytime; back wall with a high wooden shelf holding a few jars and books on the upper left, a window or lamp light source on the left, lower wall panels, wooden floor filling only the bottom 22 percent of the image; the whole center and lower-middle of the wall is completely empty (no table, no furniture, no boxes)."
+  },
+  {
+    "name": "sC_drawer",
+    "bg": false,
+    "style": "hand-painted storybook illustration in gouache and watercolor, visible soft brush texture and paper grain, gentle thin colored-pencil outlines, warm golden MORNING sunlight from a window on the left, cozy but bright, soft natural palette (honey, sage green, cream, terracotta, dusty blue).",
+    "prompt": "a single cute wooden storage drawer cabinet with one closed drawer, a cup handle, a small blank label holder on the drawer front."
+  },
+  {
+    "name": "sC_bit",
+    "bg": false,
+    "style": "hand-painted storybook illustration in gouache and watercolor, visible soft brush texture and paper grain, gentle thin colored-pencil outlines, warm golden MORNING sunlight from a window on the left, cozy but bright, soft natural palette (honey, sage green, cream, terracotta, dusty blue).",
+    "prompt": "character sprite sheet of the SAME cute chibi kid mascot named Bit (big head, short brown hair, round eyes, teal shirt, brown shop apron) shown 4 times in a single horizontal row with equal spacing, full body, facing the viewer: pose 1 standing relaxed, pose 2 both arms raised working, pose 3 jumping happily, pose 4 dizzy and worried. Same size and same outfit in every pose. Wide 4:1 image instead of square."
+  }
+]

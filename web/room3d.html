@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Góc học PE · 3D</title>
+<style>
+  :root{--ink:#fff6ee;--mute:#cdbfd6;--amber:#ffc97a;--glass:rgba(30,21,42,.62);--line:rgba(255,236,220,.16)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0d0b13;color:var(--ink);font:14px/1.4 "Be Vietnam Pro",system-ui,"Segoe UI",sans-serif;overflow:hidden}
+  canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  .chip{position:fixed;background:var(--glass);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #title{left:16px;top:16px;padding:10px 14px}
+  #title b{display:block;font-size:16px}
+  #title span{color:var(--mute);font-size:12px}
+  #stats{right:16px;top:16px;padding:10px 14px;font:12px/1.5 ui-monospace,Consolas,monospace;color:var(--mute);min-width:150px}
+  #stats b{color:var(--amber);font-weight:600}
+  #bar{left:50%;bottom:16px;transform:translateX(-50%);padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 32px)}
+  #clock{font:600 18px ui-monospace,Consolas,monospace;color:var(--amber);min-width:56px}
+  #tod{width:min(42vw,340px);accent-color:var(--amber)}
+  button{font:inherit;color:var(--ink);background:rgba(255,236,220,.08);border:1px solid var(--line);border-radius:10px;padding:7px 12px;cursor:pointer}
+  button:hover{background:rgba(255,236,220,.16)}
+  button[aria-pressed=true]{background:rgba(255,201,122,.22);border-color:rgba(255,201,122,.5)}
+  #tip{pointer-events:none;padding:6px 10px;font-size:13px;opacity:0;transition:opacity .25s;white-space:nowrap;transform:translate(-50%,-140%)}
+  #toast{left:50%;top:18%;transform:translate(-50%,0);padding:10px 16px;opacity:0;transition:opacity .4s;pointer-events:none}
+  #ref2d{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;clip-path:inset(0 calc(100% - var(--cut,0%)) 0 0)}
+  #cutLine{position:fixed;top:0;bottom:0;left:var(--cut,0%);width:2px;margin-left:-1px;background:rgba(255,236,220,.8);box-shadow:0 0 12px rgba(0,0,0,.6);pointer-events:none;opacity:0;transition:opacity .2s}
+  #cmp{left:16px;top:84px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;width:min(240px,calc(100vw - 32px))}
+  #cmp .row{display:flex;gap:6px;align-items:center}
+  #cmp .row button{flex:1}
+  #cmp label{font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:4px}
+  #cmp input{accent-color:var(--amber);width:100%}
+  @media (max-width:640px){#cmp{top:auto;bottom:118px}}
+  #load{position:fixed;inset:0;display:grid;place-items:center;background:#0d0b13;color:var(--mute);transition:opacity .8s;z-index:5}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="title" class="chip"><b>Góc học PE · 3D</b><span>Rê chuột để nhìn quanh · bấm vào đồ vật / cửa sổ</span></div>
+<img id="ref2d" src="/assets/pe-room.webp" alt="">
+<div id="cutLine"></div>
+<div id="stats" class="chip">đang tải…</div>
+<div id="cmp" class="chip">
+  <button id="bLamp" aria-pressed="false">Đèn: theo giờ</button>
+  <div class="row"><button data-style="0" aria-pressed="true">Mịn</button><button data-style="1" aria-pressed="false">Vẽ tay</button></div>
+  <label>Cảnh ngoài cửa sổ</label>
+  <div class="row"><button data-view="painted" aria-pressed="true">Tranh 2D</button><button data-view="layered" aria-pressed="false">Dựng lớp</button></div>
+  <label>So với tranh 2D gốc<input id="cmp2d" type="range" min="0" max="100" value="0"></label>
+</div>
+<div id="tip" class="chip"></div>
+<div id="toast" class="chip"></div>
+<div id="bar" class="chip">
+  <span id="clock">18:00</span>
+  <input id="tod" type="range" min="0" max="24" step="0.05" value="18" aria-label="Thời gian trong ngày">
+  <button id="bReal" aria-pressed="false">Giờ thật</button>
+  <button id="bWin" aria-pressed="false">Mở cửa sổ</button>
+  <button id="bRain" aria-pressed="false">Mưa</button>
+</div>
+<div id="load">Đang tải căn phòng…</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

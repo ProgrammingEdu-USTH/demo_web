@@ -1,0 +1,19 @@
+{
+  "name": "pe-3d",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "textures": "node scripts/textures.mjs"
+  },
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5",
+    "vite": "^6.0.0"
+  }
+}

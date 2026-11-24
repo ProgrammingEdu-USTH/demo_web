@@ -1,0 +1,920 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CourseLevel {
+  beginner
+  intermediate
+  advanced
+
+  @@map("course_level")
+}
+
+enum QuizStatus {
+  generated
+  submitted
+
+  @@map("quiz_status")
+}
+
+model User {
+  id                     Int       @id @default(autoincrement())
+  name                   String?
+  email                  String    @unique
+  phone                  String?
+  birthday               DateTime? @db.Date
+  role                   String
+  password               String    @db.VarChar(512)
+  xp                     Int       @default(0)
+  streak                 Int       @default(0)
+  gems                   Int       @default(0)
+  certificates           Int       @default(0)
+  questionnaireCompleted Boolean   @default(false) @map("questionnaire_completed")
+  lastStudyDate          DateTime? @map("last_study_date") @db.Date
+  oauthProvider          String?   @map("oauth_provider")
+  oauthProviderId        String?   @map("oauth_provider_id")
+  avatar                 String?
+  isVerified             Boolean   @default(false) @map("is_verified")
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  authSessions          AuthSession[]
+  emailVerifications    EmailVerification[]
+  oauthAccounts         UserOauthAccount[]
+  courses               Course[]
+  enrollments           Enrollment[]
+  lessonProgressArchive LessonProgressArchive[]
+  lessonProgress        LessonProgress[]
+  courseRatings         CourseRating[]
+  missions              Mission[]
+  quizzes               Quiz[]
+  reviewQuizResults     ReviewQuizResult[]
+  surveys               Survey[]
+  placementAttempts     PlacementAttempt[]
+  roadmaps              RoadMap[]
+  roadmapProgress       RoadMapProgress[]
+  dailyXpLogs           UserDailyXpLog[]
+  userBadges            UserBadge[]
+  notificationSetting   NotificationSetting?
+  notifications         Notification[]
+  comments              Comment[]
+  posts                 Post[]
+  postReactions         PostReaction[]
+  commentReactions      CommentReaction[]
+  userAchievements      UserAchievement[]
+  following             UserFollow[]            @relation("UserFollowers")
+  followers             UserFollow[]            @relation("UserFollowing")
+  learningEvents        LearningEvent[]
+  logConsents           LearningEventConsent[]
+  learningTimeDaily     LearningTimeDaily[]
+  // Arena (đấu code 1v1) — ghép từ demo_web nhánh test-usth
+  arenaHosted           ArenaMatch[]            @relation("ArenaHost")
+  arenaJoined           ArenaMatch[]            @relation("ArenaGuest")
+  arenaWon              ArenaMatch[]            @relation("ArenaWinner")
+  arenaSubmissions      ArenaSubmission[]
+  arenaRating           ArenaRating?
+  // Arena · Đoán output (từ app Arena trong máy tính Góc học của pe-usth)
+  quizHosted            ArenaQuizMatch[]        @relation("QuizHost")
+  quizJoined            ArenaQuizMatch[]        @relation("QuizGuest")
+  quizWon               ArenaQuizMatch[]        @relation("QuizWinner")
+  quizAnswers           ArenaQuizAnswer[]
+  quizRating            ArenaQuizRating?
+
+  /// BE12: một số điện thoại một tài khoản. Postgres coi NULL là khác nhau nên người đăng ký bằng
+  /// email (phone NULL) không bị chặn; không cần chỉ mục từng phần (Prisma cũng không biểu diễn được).
+  @@unique([phone], map: "uq_users_phone")
+  // Bảng xếp hạng ORDER BY xp/streak DESC LIMIT 20.
+  // `map:` giữ đúng tên trong prisma/optional-indexes.sql để bản chạy tay
+  // (CONCURRENTLY) và migration 20261012000000 là cùng một index.
+  @@index([xp(sort: Desc)], map: "idx_users_xp_desc")
+  @@index([streak(sort: Desc)], map: "idx_users_streak_desc")
+  @@map("users")
+}
+
+model AuthSession {
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  token      String
+  // Chuỗi token sinh ra từ cùng một lần đăng nhập (xem RefreshTokenService).
+  // Nullable: bản Django dùng chung bảng không biết cột này.
+  familyId   String?   @map("family_id")
+  deviceInfo String?   @map("device_info")
+  expiresAt  DateTime? @map("expires_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([familyId])
+  @@index([token], map: "idx_auth_sessions_token")
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([userId])
+  @@map("auth_sessions")
+}
+
+model EmailVerification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String
+  type      String?
+  expiresAt DateTime @default(now()) @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([userId])
+  @@map("email_verifications")
+}
+
+model UserOauthAccount {
+  id             Int     @id @default(autoincrement())
+  userId         Int     @map("user_id")
+  provider       String?
+  providerUserId String  @map("provider_user_id")
+
+  user User @relation(fields: [userId], references: [id])
+
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([userId])
+  @@map("user_oauth_accounts")
+}
+
+model Course {
+  id             String       @id @default(cuid())
+  title          String?
+  level          CourseLevel?
+  rating         Float        @db.Real
+  lessonCount    Int          @map("lessons")
+  instructorId   Int          @map("instructor_id")
+  xp_reward      Int
+  isPublished    Boolean      @default(false) @map("is_published")
+  contentMeta    Json?        @map("content_meta") @db.JsonB
+  // Task 88: filter theo language + map accentColor ra response camelCase.
+  language       String?
+  accentColor    String?      @map("accent_color")
+  // Phiên bản nội dung cả khoá, để cache backend/FE biết khi nào phải nạp lại.
+  // Nullable: bản Django dùng chung bảng không biết cột này; NULL = chưa đánh phiên bản.
+  contentVersion Int?         @map("content_version")
+
+  user                  User                    @relation(fields: [instructorId], references: [id])
+  lessons               Lesson[]
+  enrollments           Enrollment[]
+  lessonProgressArchive LessonProgressArchive[]
+  lessonProgress        LessonProgress[]
+  courseRatings         CourseRating[]
+  missions              Mission[]
+  quizzes               Quiz[]
+
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([instructorId])
+  @@map("courses")
+}
+
+model Lesson {
+  id               Int      @id @default(autoincrement())
+  courseId         String   @map("course_id")
+  lessonCode       String?  @map("lesson_code")
+  module           String?
+  title            String?
+  subtitle         String?
+  sortOrder        Int      @map("sort_order")
+  contentJson      Json?    @map("content_json") @db.JsonB
+  estimatedMinutes Int?     @map("estimated_minutes")
+  xpReward         Int      @map("xp_reward")
+  // sha256 của content_json, để nạp lại nội dung an toàn (so hash cũ → mới) và làm
+  // khoá cache. Nullable: bài có trước cột này và bản Django không biết nó.
+  contentHash      String?  @map("content_hash")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  course                Course                  @relation(fields: [courseId], references: [id])
+  lessonProgressArchive LessonProgressArchive[]
+  lessonProgress        LessonProgress[]
+
+  @@unique([courseId, lessonCode])
+  // Bản ghi tự tạo khi hoàn thành bài để lesson_code NULL, nên unique ở trên
+  // không chặn được trùng (Postgres coi mọi NULL là khác nhau). Ràng buộc này
+  // mới là thứ làm nhánh bắt P2002 trong LessonsService.resolveLesson() hoạt
+  // động. Xem migration 20261012000000_critical_indexes_and_lesson_sort_unique.
+  @@unique([courseId, sortOrder], map: "uq_lessons_course_sort")
+  // Đã BỎ @@index([contentJson], type: Gin): idx_scan = 0 và nặng 3,5 MB trên bảng
+  // lessons 5,5 MB. content_json chỉ được đọc/ghi nguyên cột, không có truy vấn
+  // JSONB nào lọc theo nội dung — đừng viết truy vấn kiểu đó, cần thì thêm cột riêng.
+  @@map("lessons")
+}
+
+model Enrollment {
+  resetAt          DateTime? @map("reset_at") @db.Timestamptz(6)
+  userId           Int       @map("user_id")
+  courseId         String    @map("course_id")
+  progress         Int
+  completedLessons Int       @map("completed_lessons")
+  status           String?
+  // Lưu dạng chuỗi '12.5h' theo bản Django -> StatsService.parseTimeSpent() parse ra số.
+  timeSpent        String?   @map("time_spent")
+  enrolledAt       DateTime  @default(now()) @map("enrolled_at") @db.Timestamptz(6)
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@id([userId, courseId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+model LessonProgress {
+  userId      Int      @map("user_id")
+  lessonId    Int      @map("lesson_id")
+  courseId    String   @map("course_id")
+  status      String?
+  quizScore   Int      @map("quiz_score")
+  xpEarned    Int      @map("xp_earned")
+  completedAt DateTime @default(now()) @map("completed_at") @db.Timestamptz(6)
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@id([userId, lessonId])
+  // PK (user_id, lesson_id) không phủ được course_id — tính lại tiến độ khi
+  // enroll/complete lọc theo cặp (user_id, course_id).
+  @@index([userId, courseId], map: "idx_lesson_progress_user_course")
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([courseId])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+// Nhật ký LẦN THỬ — phụ lục theo thời gian cho những gì `lesson_progress` không
+// ghi được. Chi tiết lý do từng cột nằm trong
+// prisma/migrations/20261028000000_learning_events/migration.sql; phần phải nhớ
+// khi sửa model này:
+//
+//  · `id` là Int (SERIAL) có chủ đích — BigInt làm `JSON.stringify` NÉM khi có
+//    route nào đọc lại bảng này.
+//  · KHÔNG có `lessonId` và KHÔNG có quan hệ tới `Lesson`/`Course`: bài tra theo
+//    `(courseId, lessonNo)` như cả hệ thống, còn khoá ngoại tới `lessons` sẽ làm
+//    MỘT sự kiện mang mã bài rác giết cả LÔ `createMany`.
+//  · `payload` đã được cắt trần ở `learning-events.sanitize.ts` trước khi tới
+//    đây. Mã nguồn của người học KHÔNG BAO GIỜ nằm trong này — kể cả dưới dạng
+//    hash (`code` và `codeHash` đều trong `KHOA_CAM_PAYLOAD`). Bảng giữ KẾT
+//    LUẬN `sameAsPrev`/`repeatStreak`, không giữ dấu vân tay.
+//  · HẠN LƯU 90 NGÀY (`HAN_LUU_NGAY`). Câu `DELETE` nằm ở cuối
+//    `scripts/learning-events/truy-van.sql`; không có job tự xoá, có chủ đích.
+//  · Lớp này chỉ phát ra sự kiện SAU khi người học đồng ý — cổng đồng ý nằm ở
+//    `frontend/src/lib/learning-events.ts`, mặc định TẮT.
+model LearningEvent {
+  id           Int       @id @default(autoincrement())
+  /// UUID v4 do CLIENT sinh cho TỪNG sự kiện — khoá chống trùng. Một lô gửi
+  /// lúc trang ẩn có thể TỚI máy chủ mà phản hồi không về kịp, nên client gửi
+  /// lại; `@unique` + `skipDuplicates` làm lần hai thành no-op, và `createMany`
+  /// trả về số hàng THẬT SỰ chèn nên tỉ lệ trùng là số đo miễn phí.
+  eventId      String    @unique(map: "uq_learning_events_event_id") @map("event_id")
+  userId       Int       @map("user_id")
+  courseId     String?   @map("course_id")
+  /// `lessons.sort_order` của bài, không phải `lessons.id` — khoá mà cả hệ
+  /// thống dùng, và là thứ câu SQL drop-off cần để xếp thứ bậc bài.
+  lessonNo     Int?      @map("lesson_no")
+  /// `LessonScreen.key` của màn đang mở (vd `s2-mcq-0`) — chỗ duy nhất nói được
+  /// "họ bỏ dở ở MÀN nào", không chỉ "ở bài nào".
+  screenKey    String?   @map("screen_key")
+  kind         String
+  payload      Json?     @db.JsonB
+  /// BA dấu thời gian, không phải hai (mẫu Snowplow `dtm`/`stm`/collector):
+  /// `clientAt` = thiết bị TẠO sự kiện, `clientSentAt` = thiết bị GỬI lô,
+  /// `createdAt` = máy chủ NHẬN. Hai mốc đầu cùng một đồng hồ nên HIỆU của
+  /// chúng đúng dù giờ máy sai; mốc dùng để so GIỮA người học là mốc suy ra
+  /// `createdAt - (clientSentAt - clientAt)`, không phải `clientAt`.
+  clientAt     DateTime? @map("client_at") @db.Timestamptz(6)
+  clientSentAt DateTime? @map("client_sent_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ba index phục vụ đúng ba câu trong scripts/learning-events/truy-van.sql.
+  // `kind` đứng đầu vì heartbeat là loại đông nhất: lọc nó ra trước là bỏ được
+  // phần lớn bảng.
+  @@index([kind, courseId, lessonNo], map: "idx_learning_events_kind_lesson")
+  @@index([userId, courseId, lessonNo, kind], map: "idx_learning_events_user_lesson")
+  @@index([createdAt(sort: Desc)], map: "idx_learning_events_created")
+  @@map("learning_events")
+}
+
+/// SỰ ĐỒNG Ý cho lớp ghi nhật ký. Bảng CHỈ THÊM HÀNG (append-only): một hàng cho
+/// mỗi lần người học quyết, kể cả lần RÚT LẠI (`granted = false`). Trạng thái
+/// hiện tại là hàng MỚI NHẤT theo `created_at`.
+///
+/// Vì sao append-only chứ không một cột trên `users`: phải chứng minh được cả
+/// việc rút lại, và một cột bị ghi đè thì lịch sử đó không còn. Luật về dữ liệu
+/// nhạy cảm đòi chứng minh được sự đồng ý, mà một giá trị hiện tại không chứng
+/// minh được nó có từ lúc nào.
+///
+/// `version` là thứ làm cho "đã đồng ý" không tự động nghĩa là "đồng ý điều
+/// này" — xem `learning-event-consent.ts`. Không có nó thì mở rộng phạm vi thu
+/// thập sẽ chạy dưới sự đồng ý cũ mà không ai biết.
+model LearningEventConsent {
+  id Int @id @default(autoincrement())
+
+  userId Int @map("user_id")
+
+  /// `true` = đồng ý, `false` = từ chối HOẶC rút lại. Một cột boolean chứ không
+  /// hai loại hàng riêng: "từ chối" và "rút lại" là cùng một kết quả (không
+  /// được ghi), và phân biệt chúng được bằng việc có hàng `true` nào trước đó.
+  granted Boolean
+
+  /// Phiên bản bản mô tả mà người học đồng ý với (`PHIEN_BAN_DONG_Y`). Lưu lại
+  /// chứ không suy ra: sáu tháng sau, biết hàng này ứng với bản mô tả nào là
+  /// toàn bộ giá trị của nó.
+  version String
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Đọc trạng thái hiện tại là `WHERE user_id = ? ORDER BY created_at DESC
+  /// LIMIT 1`, và nó chạy MỘT LẦN mỗi lô sự kiện — nên index phải phủ đúng hình
+  /// dạng đó, không chỉ `user_id`.
+  @@index([userId, createdAt(sort: Desc)], map: "idx_log_consents_user_created")
+  @@map("learning_event_consents")
+}
+
+/// THỜI GIAN HỌC theo ngày — thứ duy nhất còn lại của `X-Lesson.Heartbeat` sau khi hàng
+/// thô bị gộp (`scripts/learning-events/rollup-heartbeats.ts`). Heartbeat là loại đông nhất
+/// (52% bảng `learning_events`, một hàng mỗi 30 giây) mà chỉ mang MỘT thông tin: "còn đang mở
+/// bài", nên giữ nó dạng "bao nhiêu phút" là đủ cho câu hỏi thời gian-trên-tác-vụ.
+///
+/// Không có `screen_key`/payload: tóm tắt này chỉ trả lời "học bao lâu", không trả lời "ở màn
+/// nào" — câu đó vẫn do hàng thô của Abandon/Run.Test/Submit (giữ 90 ngày) trả lời.
+/// `course_id`/`lesson_no` là chuỗi rỗng/0 khi sự kiện gốc không gắn bài, để nằm được trong
+/// khoá chính (cột khoá chính không được NULL).
+/// Hạn giữ 90 ngày, bằng `HAN_LUU_NGAY` — không giữ lâu hơn điều đã hứa với người học.
+model LearningTimeDaily {
+  userId        Int      @map("user_id")
+  day           DateTime @db.Date
+  courseId      String   @default("") @map("course_id")
+  lessonNo      Int      @default(0) @map("lesson_no")
+  /// Số phút KHÁC NHAU có ít nhất một heartbeat — hai heartbeat cùng phút tính một.
+  activeMinutes Int      @map("active_minutes")
+  /// Số hàng heartbeat đã gộp vào dòng này; dùng để kiểm "gộp không làm mất hàng nào".
+  heartbeats    Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day, courseId, lessonNo])
+  @@map("learning_time_daily")
+}
+
+model CourseRating {
+  userId    Int      @map("user_id")
+  courseId  String   @map("course_id")
+  rating    Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@id([userId, courseId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([courseId])
+  @@map("course_ratings")
+}
+
+model Mission {
+  userId           Int     @map("user_id")
+  courseId         String  @map("course_id")
+  title            String?
+  xpReward         Int     @map("xp_reward")
+  correctCondition String? @map("correct_condition")
+  isActive         Boolean @default(false) @map("is_active")
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@id([userId, courseId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([courseId])
+  @@map("missions")
+}
+
+model Quiz {
+  id            Int         @id @default(autoincrement())
+  userId        Int         @map("user_id")
+  courseId      String      @map("course_id")
+  status        QuizStatus? @default(generated)
+  /// Loại đề. NULL = đề ôn tập thường (mọi bản ghi có trước cột này, và mọi
+  /// đề do `generateQuiz`/`generateReviewQuiz`/`generateTodayQuiz` phát).
+  /// `'post_test'` = BÀI HẬU KIỂM CÓ TRỄ, thứ chỉ được phát MỘT LẦN cho mỗi
+  /// học viên mỗi khoá — và cột này là chỗ duy nhất trả lời được câu "đã phát
+  /// chưa". Là chuỗi tự do chứ KHÔNG phải enum: thêm giá trị vào một enum
+  /// Postgres đang dùng chung với bản Django là đổi kiểu, mà luật của repo chỉ
+  /// cho THÊM cột nullable / thêm index.
+  kind          String?     @map("kind")
+  questionsJson Json        @map("questions_json") @db.JsonB
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course            Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  reviewQuizResults ReviewQuizResult[]
+
+  @@index([userId, courseId])
+  @@index([status])
+  // Cổng một-lần của bài hậu kiểm tra đúng ba cột này mỗi lần người học mở
+  // trang; không có index là quét bảng quizzes (phình theo mọi lượt ôn tập).
+  @@index([userId, courseId, kind], map: "idx_quizzes_user_course_kind")
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([courseId])
+  @@map("quizzes")
+}
+
+model ReviewQuizResult {
+  id          Int      @id @default(autoincrement())
+  quizId      Int      @map("quiz_id")
+  userId      Int      @map("user_id")
+  score       Int
+  total       Int
+  answersJson Json     @map("answers_json") @db.JsonB
+  submittedAt DateTime @default(now()) @map("submitted_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([quizId])
+  @@map("review_quiz_results")
+}
+
+model Survey {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  dataJson  Json     @map("data_json") @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user     User      @relation(fields: [userId], references: [id])
+  roadmaps RoadMap[]
+
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([userId])
+  @@map("surveys")
+}
+
+model RoadMap {
+  id                    String   @id @default(cuid())
+  userId                Int      @map("user_id")
+  generatedFromSurveyId Int      @map("generated_from_survey_id")
+  source                String?
+  title                 String?  @map("title")
+  nodesJson             Json     @map("nodes_json") @db.JsonB
+  edgesJson             Json     @map("edges_json") @db.JsonB
+  mermaidDef            String?  @map("mermaid_def")
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user            User              @relation(fields: [userId], references: [id])
+  survey          Survey            @relation(fields: [generatedFromSurveyId], references: [id])
+  roadmapProgress RoadMapProgress[]
+
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([userId])
+  @@index([generatedFromSurveyId])
+  @@map("roadmaps")
+}
+
+model RoadMapProgress {
+  userId      Int      @map("user_id")
+  roadmapId   String   @map("roadmap_id")
+  itemId      String   @map("item_id")
+  done        Boolean  @default(false)
+  completedAt DateTime @default(now()) @map("completed_at") @db.Timestamptz(6)
+
+  user    User    @relation(fields: [userId], references: [id])
+  roadmap RoadMap @relation(fields: [roadmapId], references: [id])
+
+  @@id([userId, roadmapId, itemId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([roadmapId])
+  @@map("roadmap_progress")
+}
+
+/// Ngân hàng câu hỏi đầu vào, có phiên bản. questions_json CHỨA ĐÁP ÁN ĐÚNG: chỉ server đọc để chấm,
+/// gửi ra FE phải bỏ cờ đáp án (xem bẫy "lộ đáp án" ở AGENTS.md). Chỉ một bản is_active tại một thời điểm —
+/// do service giữ (Prisma không biểu diễn được chỉ mục từng phần nên không đặt ở DB).
+model Questionnaire {
+  id            Int     @id @default(autoincrement())
+  version       Int     @unique(map: "uq_questionnaires_version")
+  title         String?
+  questionsJson Json    @map("questions_json") @db.JsonB
+  isActive      Boolean @default(false) @map("is_active")
+
+  placementAttempts PlacementAttempt[]
+
+  @@map("questionnaires")
+}
+
+/// Một lượt làm bài đầu vào của một người (khách cũng là một dòng users, nên dùng chung bảng này).
+/// answers[i] = chỉ số lựa chọn người đó chọn cho câu thứ i của bản câu hỏi (-1 = bỏ qua); score/total do SERVER chấm.
+/// Mỗi người một lượt cho mỗi phiên bản câu hỏi (unique) nên gửi lại là idempotent; muốn cho làm lại thì thêm cột attempt_no.
+/// CHECK (score/total/độ dài answers) nằm trong migration, Prisma không biểu diễn.
+model PlacementAttempt {
+  id              BigInt   @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  questionnaireId Int      @map("questionnaire_id")
+  answers         Int[]    @db.SmallInt
+  score           Int      @db.SmallInt
+  total           Int      @db.SmallInt
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionnaire Questionnaire @relation(fields: [questionnaireId], references: [id])
+
+  @@unique([userId, questionnaireId], map: "uq_placement_user_questionnaire")
+  @@index([questionnaireId], map: "idx_placement_questionnaire")
+  @@map("placement_attempts")
+}
+
+model UserDailyXpLog {
+  id       Int      @id @default(autoincrement())
+  userId   Int      @map("user_id")
+  logDate  DateTime @map("log_date") @db.Date
+  xpEarned Int      @map("xp_earned")
+
+  user User @relation(fields: [userId], references: [id])
+
+  // Mỗi người MỘT hàng mỗi ngày — để addDailyXp() upsert được (BE3, migration
+  // 20261111000000_daily_xp_log_unique).
+  @@unique([userId, logDate], map: "uq_daily_xp_user_date")
+  // Leaderboard tuần: SUM(xp_earned) theo (user_id, khoảng log_date).
+  // Thừa từ khi có unique bên dưới, nhưng GIỮ: migration chỉ được THÊM (AGENTS.md).
+  @@index([userId, logDate], map: "idx_daily_xp_user_date")
+  @@map("user_daily_xp_logs")
+}
+
+model Badge {
+  id             Int     @id @default(autoincrement())
+  code           String? @unique
+  name           String?
+  conditionType  String? @map("condition_type")
+  conditionValue Int     @map("condition_value")
+
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  userId    Int      @map("user_id")
+  badgeId   Int      @map("badge_id")
+  awardedAt DateTime @default(now()) @map("awarded_at") @db.Timestamptz(6)
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([badgeId])
+  @@map("user_badges")
+}
+
+model NotificationSetting {
+  userId        Int     @map("user_id")
+  emailNotif    Boolean @map("email_notif")
+  pushNotif     Boolean @map("push_notif")
+  studyRemind   Boolean @map("study_remind")
+  contentUpdate Boolean @map("content_update")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([userId])
+  @@map("notification_settings")
+}
+
+model Notification {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  type          String?
+  title         String?
+  body          String?
+  refType       String?  @map("ref_type")
+  refId         Int      @map("ref_id")
+  isRead        Boolean  @default(false) @map("is_read")
+  // Task 199-201: gộp thông báo cùng (type, ref_type, ref_id) chưa đọc trong 10 phút.
+  coalesceCount Int      @default(1) @map("coalesce_count")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  // /api/notifications/badge bị client poll ~45s/lần và không rate-limit.
+  @@index([userId, isRead, createdAt(sort: Desc)], map: "idx_notifications_user_read_created")
+  @@map("notifications")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  category  String?
+  title     String?
+  content   String?
+  likeCount Int      @map("like_count")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User           @relation(fields: [userId], references: [id])
+  comments  Comment[]
+  reactions PostReaction[]
+
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([userId])
+  // Ba cách xem danh sách diễn đàn (migration forum_post_indexes): lọc chuyên mục +
+  // mới nhất, mới nhất không lọc (trang mặc định), và sắp theo lượt cảm xúc.
+  @@index([category, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@index([likeCount(sort: Desc)])
+  @@map("posts")
+}
+
+model Comment {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  postId          Int      @map("post_id")
+  parentCommentId Int?     @map("parent_comment_id")
+  content         String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user      User              @relation(fields: [userId], references: [id])
+  post      Post              @relation(fields: [postId], references: [id])
+  parent    Comment?          @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies   Comment[]         @relation("CommentReplies")
+  reactions CommentReaction[]
+
+  // Phân trang bình luận gốc (parent_comment_id IS NULL) và nạp reply theo bài.
+  @@index([postId, parentCommentId, createdAt], map: "idx_comments_post_parent_created")
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([userId])
+  @@index([parentCommentId])
+  @@map("comments")
+}
+
+// Task 163 — tên model theo task sheet (PostReaction), tên bảng theo Sheet 3 (post_likes).
+// Cột `type` giữ 1 trong 6 loại reaction; mặc định 'like' cho dữ liệu cũ.
+model PostReaction {
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  type      String   @default("like")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@id([userId, postId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([postId])
+  @@map("post_likes")
+}
+
+// Task 164 — bảng comment_likes (Sheet 3), chưa từng tồn tại trong DB.
+model CommentReaction {
+  userId    Int      @map("user_id")
+  commentId Int      @map("comment_id")
+  type      String   @default("like")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user    User    @relation(fields: [userId], references: [id])
+  comment Comment @relation(fields: [commentId], references: [id])
+
+  @@id([commentId, userId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([userId])
+  @@map("comment_likes")
+}
+
+// Task 148-149 — achievements/user_achievements (Sheet 3 liệt kê composite key
+// user_achievements(user_id, achievement_id)). Tách riêng khỏi badges/user_badges.
+model Achievement {
+  id             Int     @id @default(autoincrement())
+  code           String? @unique
+  name           String?
+  description    String?
+  icon           String?
+  conditionType  String? @map("condition_type")
+  conditionValue Int     @default(0) @map("condition_value")
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  userId        Int      @map("user_id")
+  achievementId Int      @map("achievement_id")
+  awardedAt     DateTime @default(now()) @map("awarded_at") @db.Timestamptz(6)
+
+  user        User        @relation(fields: [userId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@id([userId, achievementId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([achievementId])
+  @@map("user_achievements")
+}
+
+model UserFollow {
+  followerId Int      @map("follower_id")
+  followeeId Int      @map("followee_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  follower User @relation("UserFollowers", fields: [followerId], references: [id])
+  followee User @relation("UserFollowing", fields: [followeeId], references: [id])
+
+  @@id([followerId, followeeId])
+  // Khoá ngoại không đứng đầu chỉ mục nào: tra/xoá theo cha sẽ quét cả bảng (migration fk_indexes).
+  @@index([followeeId])
+  @@map("user_follows")
+}
+
+/// Lịch sử học lại; giữ bằng chứng đã thưởng dù tiến độ hiện tại đã bị xoá.
+model LessonProgressArchive {
+  id          BigInt   @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  lessonId    Int      @map("lesson_id")
+  courseId    String   @map("course_id")
+  status      String?
+  quizScore   Int      @map("quiz_score")
+  xpEarned    Int      @map("xp_earned")
+  completedAt DateTime @map("completed_at") @db.Timestamptz(6)
+  archivedAt  DateTime @default(now()) @map("archived_at") @db.Timestamptz(6)
+  user        User     @relation(fields: [userId], references: [id])
+  lesson      Lesson   @relation(fields: [lessonId], references: [id])
+  course      Course   @relation(fields: [courseId], references: [id])
+
+  @@index([userId, courseId])
+  @@index([userId, lessonId])
+  @@index([lessonId])
+  @@index([courseId])
+  @@map("lesson_progress_archive")
+}
+
+// ───────────── Arena: đấu code 1v1 (từ demo_web, nhánh test-usth, src/arena) ─────────────
+
+enum ArenaMatchStatus {
+  waiting
+  active
+  finished
+  cancelled
+
+  @@map("arena_match_status")
+}
+
+enum ArenaEndReason {
+  solved
+  timeout
+  forfeit
+
+  @@map("arena_end_reason")
+}
+
+enum ArenaSubmissionStatus {
+  graded
+  rejected
+  error
+
+  @@map("arena_submission_status")
+}
+
+model ArenaMatch {
+  id               Int              @id @default(autoincrement())
+  code             String           @unique @db.VarChar(8)
+  isPublic         Boolean          @default(false) @map("is_public")
+  status           ArenaMatchStatus @default(waiting)
+  problemId        String           @map("problem_id") @db.VarChar(64)
+  hostId           Int              @map("host_id")
+  guestId          Int?             @map("guest_id")
+  winnerId         Int?             @map("winner_id")
+  endReason        ArenaEndReason?  @map("end_reason")
+  hostRatingDelta  Int?             @map("host_rating_delta")
+  guestRatingDelta Int?             @map("guest_rating_delta")
+  hostXp           Int?             @map("host_xp")
+  guestXp          Int?             @map("guest_xp")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  startedAt        DateTime?        @map("started_at") @db.Timestamptz(6)
+  deadlineAt       DateTime?        @map("deadline_at") @db.Timestamptz(6)
+  finishedAt       DateTime?        @map("finished_at") @db.Timestamptz(6)
+
+  host        User              @relation("ArenaHost", fields: [hostId], references: [id])
+  guest       User?             @relation("ArenaGuest", fields: [guestId], references: [id])
+  winner      User?             @relation("ArenaWinner", fields: [winnerId], references: [id])
+  submissions ArenaSubmission[]
+
+  @@index([status, isPublic, createdAt])
+  @@index([hostId, status])
+  @@index([guestId, status])
+  @@map("arena_matches")
+}
+
+model ArenaSubmission {
+  id        Int                   @id @default(autoincrement())
+  matchId   Int                   @map("match_id")
+  userId    Int                   @map("user_id")
+  code      String                @db.Text
+  status    ArenaSubmissionStatus
+  passed    Int                   @default(0)
+  total     Int                   @default(0)
+  // { "public": [{ "index": 0, "passed": true, "got": "...", "error": "..." }], "hiddenPassed": 3, "hiddenTotal": 5 }
+  // KHÔNG chứa đầu vào/đầu ra mong đợi của test ẩn.
+  detail    Json?
+  message   String?               @db.VarChar(300)
+  createdAt DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  gradedAt  DateTime?             @map("graded_at") @db.Timestamptz(6)
+
+  match ArenaMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id])
+
+  @@index([matchId, userId, createdAt])
+  @@map("arena_submissions")
+}
+
+model ArenaRating {
+  userId    Int      @id @map("user_id")
+  rating    Int      @default(1000)
+  wins      Int      @default(0)
+  losses    Int      @default(0)
+  draws     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([rating(sort: Desc)])
+  @@map("arena_ratings")
+}
+
+// ───────────── Arena · Đoán output: đấu nhanh 1v1 (từ pe-usth, máy tính Góc học) ─────────────
+// Lịch câu hỏi KHÔNG lưu: dựng lại từ started_at + các câu trả lời (src/arena-quiz/quiz-logic.ts).
+
+model ArenaQuizMatch {
+  id               Int              @id @default(autoincrement())
+  status           ArenaMatchStatus @default(waiting)
+  hostId           Int              @map("host_id")
+  guestId          Int?             @map("guest_id")
+  winnerId         Int?             @map("winner_id")
+  // [{ "qid": "q07", "opts": ["…", …], "answer": 2 }] — đáp án chỉ rời server khi câu đã đóng
+  questions        Json
+  // 'completed' | 'forfeit'
+  endReason        String?          @map("end_reason") @db.VarChar(16)
+  unscored         Boolean          @default(false)
+  hostScore        Int              @default(0) @map("host_score")
+  guestScore       Int              @default(0) @map("guest_score")
+  hostRatingDelta  Int?             @map("host_rating_delta")
+  guestRatingDelta Int?             @map("guest_rating_delta")
+  hostXp           Int?             @map("host_xp")
+  guestXp          Int?             @map("guest_xp")
+  hostSeenAt       DateTime         @default(now()) @map("host_seen_at") @db.Timestamptz(6)
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  startedAt        DateTime?        @map("started_at") @db.Timestamptz(6)
+  finishedAt       DateTime?        @map("finished_at") @db.Timestamptz(6)
+
+  host    User              @relation("QuizHost", fields: [hostId], references: [id])
+  guest   User?             @relation("QuizGuest", fields: [guestId], references: [id])
+  winner  User?             @relation("QuizWinner", fields: [winnerId], references: [id])
+  answers ArenaQuizAnswer[]
+
+  @@index([status, createdAt])
+  @@index([hostId, status])
+  @@index([guestId, status])
+  @@map("arena_quiz_matches")
+}
+
+model ArenaQuizAnswer {
+  id        Int      @id @default(autoincrement())
+  matchId   Int      @map("match_id")
+  userId    Int      @map("user_id")
+  qIndex    Int      @map("q_index") @db.SmallInt
+  choice    Int      @db.SmallInt
+  correct   Boolean
+  points    Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  match ArenaQuizMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User           @relation(fields: [userId], references: [id])
+
+  @@unique([matchId, userId, qIndex])
+  @@index([userId])
+  @@map("arena_quiz_answers")
+}
+
+model ArenaQuizRating {
+  userId    Int      @id @map("user_id")
+  rating    Int      @default(1000)
+  wins      Int      @default(0)
+  losses    Int      @default(0)
+  draws     Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([rating(sort: Desc)])
+  @@map("arena_quiz_ratings")
+}

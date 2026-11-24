@@ -1,0 +1,306 @@
+[
+ {
+  "id": "q01",
+  "group": "M1 · Python nền tảng",
+  "name": "print()",
+  "code": "print(\"Doanh thu:\", 12 + 9)\nprint(\"latte\", \"mocha\", sep=\" | \")",
+  "output": "Doanh thu: 21\nlatte | mocha",
+  "lesson": "PY01 · Chạy một phép tính và đọc kết quả"
+ },
+ {
+  "id": "q02",
+  "group": "M1 · Python nền tảng",
+  "name": "type()",
+  "code": "print(type(12), type(\"12\"))",
+  "output": "<class 'int'> <class 'str'>",
+  "lesson": "PY04 · Biến, tên hợp lệ và kiểu dữ liệu"
+ },
+ {
+  "id": "q03",
+  "group": "M1 · Python nền tảng",
+  "name": "int() / str()",
+  "code": "so_coc = int(\"12\") + 3\nprint(str(so_coc) + \" cốc\")",
+  "output": "15 cốc",
+  "lesson": "PY04 · Biến, tên hợp lệ và kiểu dữ liệu"
+ },
+ {
+  "id": "q04",
+  "group": "M1 · Python nền tảng",
+  "name": "round()",
+  "code": "print(round(15000 / 7, 1))",
+  "output": "2142.9",
+  "lesson": "PY05 · Phép toán và thứ tự tính"
+ },
+ {
+  "id": "q05",
+  "group": "M1 · Python nền tảng",
+  "name": "len()",
+  "code": "print(len(\"cà phê\"), len([\"latte\", \"mocha\"]))",
+  "output": "6 2",
+  "lesson": "PY06 · Chuỗi, dấu nháy và ký tự xuống dòng"
+ },
+ {
+  "id": "q06",
+  "group": "M1 · Python nền tảng",
+  "name": "s[a:b]",
+  "code": "ten = \"Americano\"\nprint(ten[0:4], ten[-4:])",
+  "output": "Amer cano",
+  "lesson": "PY07 · Lấy ký tự và một đoạn chuỗi"
+ },
+ {
+  "id": "q07",
+  "group": "M1 · Python nền tảng",
+  "name": "str.strip()",
+  "code": "mon = \"  latte  \"\nprint(mon.strip().title())",
+  "output": "Latte",
+  "lesson": "PY08 · Chuẩn hóa và định dạng văn bản"
+ },
+ {
+  "id": "q08",
+  "group": "M1 · Python nền tảng",
+  "name": "f-string",
+  "code": "gia = 45000\nprint(f\"Latte: {gia:,} đ\")",
+  "output": "Latte: 45,000 đ",
+  "lesson": "PY08 · Chuẩn hóa và định dạng văn bản"
+ },
+ {
+  "id": "q09",
+  "group": "M1 · Python nền tảng",
+  "name": "str.split()",
+  "code": "mon = \"latte,mocha\".split(\",\")\nprint(mon)\nprint(\" + \".join(mon))",
+  "output": "['latte', 'mocha']\nlatte + mocha",
+  "lesson": "PY08 · Chuẩn hóa và định dạng văn bản"
+ },
+ {
+  "id": "q10",
+  "group": "M1 · Python nền tảng",
+  "name": "if / elif / else",
+  "code": "coc = 12\nif coc > 20:\n    print(\"Rất đông\")\nelif coc > 10:\n    print(\"Đông khách\")\nelse:\n    print(\"Vắng\")",
+  "output": "Đông khách",
+  "lesson": "PY09 · Điều kiện, so sánh và khối lệnh"
+ },
+ {
+  "id": "q11",
+  "group": "M1 · Python nền tảng",
+  "name": "list.append() / pop()",
+  "code": "don = [\"latte\"]\ndon.append(\"mocha\")\nprint(don.pop(0), don)",
+  "output": "latte ['mocha']",
+  "lesson": "PY10 · List: lấy, thêm và xóa phần tử"
+ },
+ {
+  "id": "q12",
+  "group": "M1 · Python nền tảng",
+  "name": "tuple",
+  "code": "diem = (10, 20)\nx, y = diem\nprint(x + y)",
+  "output": "30",
+  "lesson": "PY11 · Tuple, bytes và lựa chọn collection"
+ },
+ {
+  "id": "q13",
+  "group": "M1 · Python nền tảng",
+  "name": "dict.get()",
+  "code": "gia = {\"latte\": 45}\nprint(gia.get(\"latte\"), gia.get(\"mocha\", 0))",
+  "output": "45 0",
+  "lesson": "PY12 · Dictionary và tra cứu theo khóa"
+ },
+ {
+  "id": "q14",
+  "group": "M1 · Python nền tảng",
+  "name": "dict.items()",
+  "code": "gia = {\"latte\": 45, \"mocha\": 50}\nfor mon, tien in gia.items():\n    print(mon, tien)",
+  "output": "latte 45\nmocha 50",
+  "lesson": "PY12 · Dictionary và tra cứu theo khóa"
+ },
+ {
+  "id": "q15",
+  "group": "M1 · Python nền tảng",
+  "name": "set &  |  -",
+  "code": "sang = {\"latte\", \"mocha\"}\nchieu = {\"mocha\", \"tra\"}\nprint(sang & chieu)",
+  "output": "{'mocha'}",
+  "lesson": "PY13 · Set và so sánh hai nhóm"
+ },
+ {
+  "id": "q16",
+  "group": "M1 · Python nền tảng",
+  "name": "range()",
+  "code": "print(list(range(1, 10, 3)))",
+  "output": "[1, 4, 7]",
+  "lesson": "PY14 · For, range và biến tích lũy"
+ },
+ {
+  "id": "q17",
+  "group": "M1 · Python nền tảng",
+  "name": "enumerate()",
+  "code": "for i, mon in enumerate([\"latte\", \"mocha\"], start=1):\n    print(i, mon)",
+  "output": "1 latte\n2 mocha",
+  "lesson": "PY14 · For, range và biến tích lũy"
+ },
+ {
+  "id": "q18",
+  "group": "M1 · Python nền tảng",
+  "name": "while / break",
+  "code": "n = 0\nwhile True:\n    n += 1\n    if n == 3:\n        break\nprint(n)",
+  "output": "3",
+  "lesson": "PY15 · While, break và continue"
+ },
+ {
+  "id": "q19",
+  "group": "M1 · Python nền tảng",
+  "name": "def / return",
+  "code": "def tong(a, b=0):\n    return a + b\n\nprint(tong(2), tong(2, 3))",
+  "output": "2 5",
+  "lesson": "PY16 · Hàm, giá trị trả về và docstring"
+ },
+ {
+  "id": "q20",
+  "group": "M1 · Python nền tảng",
+  "name": "lambda / sorted(key=)",
+  "code": "mon = [(\"latte\", 45), (\"mocha\", 50), (\"tra\", 30)]\nprint(sorted(mon, key=lambda m: m[1]))",
+  "output": "[('tra', 30), ('latte', 45), ('mocha', 50)]",
+  "lesson": "PY17 · Scope, tham chiếu hàm và callback"
+ },
+ {
+  "id": "q21",
+  "group": "M1 · Python nền tảng",
+  "name": "try / except",
+  "code": "try:\n    int(\"abc\")\nexcept ValueError as e:\n    print(\"Không phải số:\", e)",
+  "output": "Không phải số: invalid literal for int() with base 10: 'abc'",
+  "lesson": "PY18 · Ngoại lệ và dữ liệu không hợp lệ"
+ },
+ {
+  "id": "q22",
+  "group": "M2 · NumPy",
+  "name": "np.array()",
+  "code": "import numpy as np\na = np.array([12, 9, 15])\nprint(a * 2)",
+  "output": "[24 18 30]",
+  "lesson": "NP01 · Array là gì?"
+ },
+ {
+  "id": "q23",
+  "group": "M2 · NumPy",
+  "name": "np.arange()",
+  "code": "import numpy as np\nprint(np.arange(0, 10, 3))",
+  "output": "[0 3 6 9]",
+  "lesson": "NP05 · Tạo dãy bằng arange"
+ },
+ {
+  "id": "q24",
+  "group": "M2 · NumPy",
+  "name": "reshape() / shape",
+  "code": "import numpy as np\nb = np.arange(6).reshape(2, 3)\nprint(b.shape)\nprint(b)",
+  "output": "(2, 3)\n[[0 1 2]\n [3 4 5]]",
+  "lesson": "NP08 · Xếp lại bằng reshape"
+ },
+ {
+  "id": "q25",
+  "group": "M2 · NumPy",
+  "name": "sum(axis=)",
+  "code": "import numpy as np\nb = np.array([[1, 2], [3, 4]])\nprint(b.sum(axis=0), b.sum(axis=1), b.sum())",
+  "output": "[4 6] [3 7] 10",
+  "lesson": "NP11 · Tổng từng cột: axis=0"
+ },
+ {
+  "id": "q26",
+  "group": "M2 · NumPy",
+  "name": "mask: a[a > x]",
+  "code": "import numpy as np\na = np.array([12, 9, 15])\nprint(a > 10)\nprint(a[a > 10])",
+  "output": "[ True False  True]\n[12 15]",
+  "lesson": "NP14 · Lọc dữ liệu bằng mask"
+ },
+ {
+  "id": "q27",
+  "group": "M2 · NumPy",
+  "name": "np.nanmean()",
+  "code": "import numpy as np\na = np.array([1.0, np.nan, 3.0])\nprint(np.mean(a), np.nanmean(a))",
+  "output": "nan 2.0",
+  "lesson": "NP17 · Dữ liệu thiếu: NaN"
+ },
+ {
+  "id": "q28",
+  "group": "M3 · pandas",
+  "name": "pd.DataFrame()",
+  "code": "import pandas as pd\ndf = pd.DataFrame({\"mon\": [\"latte\", \"mocha\"], \"coc\": [12, 9]})\nprint(df)",
+  "output": "     mon  coc\n0  latte   12\n1  mocha    9",
+  "lesson": "PD02 · DataFrame: đọc một bảng nhỏ"
+ },
+ {
+  "id": "q29",
+  "group": "M3 · pandas",
+  "name": "df.loc[]",
+  "code": "import pandas as pd\ndf = pd.DataFrame({\"mon\": [\"latte\", \"mocha\"], \"coc\": [12, 9]})\nprint(df.loc[df[\"coc\"] > 10, \"mon\"])",
+  "output": "0    latte\nName: mon, dtype: object",
+  "lesson": "PD03 · Chọn hàng và cột bằng loc, iloc"
+ },
+ {
+  "id": "q30",
+  "group": "M3 · pandas",
+  "name": "isna().sum()",
+  "code": "import pandas as pd\ndf = pd.DataFrame({\"coc\": [12, None, 9]})\nprint(df[\"coc\"].isna().sum())",
+  "output": "1",
+  "lesson": "PD08 · Ô thiếu: phát hiện trước khi điền"
+ },
+ {
+  "id": "q31",
+  "group": "M3 · pandas",
+  "name": "value_counts()",
+  "code": "import pandas as pd\nprint(pd.Series([\"latte\", \"mocha\", \"latte\"]).value_counts())",
+  "output": "latte    2\nmocha    1\nName: count, dtype: int64",
+  "lesson": "PD11 · Sắp xếp và nhìn nhanh phân bố"
+ },
+ {
+  "id": "q32",
+  "group": "M3 · pandas",
+  "name": "groupby()",
+  "code": "import pandas as pd\ndf = pd.DataFrame({\"mon\": [\"latte\", \"latte\", \"mocha\"], \"coc\": [3, 4, 9]})\nprint(df.groupby(\"mon\")[\"coc\"].sum())",
+  "output": "mon\nlatte    7\nmocha    9\nName: coc, dtype: int64",
+  "lesson": "PD14 · Groupby: tổng hợp theo nhóm"
+ },
+ {
+  "id": "q33",
+  "group": "M5 · Python ứng dụng",
+  "name": "date - date",
+  "code": "from datetime import date\nprint((date(2026, 11, 23) - date(2026, 11, 1)).days)",
+  "output": "22",
+  "lesson": "SY01 · Đọc ngày tháng và tính khoảng thời gian"
+ },
+ {
+  "id": "q34",
+  "group": "M5 · Python ứng dụng",
+  "name": "re.findall()",
+  "code": "import re\nprint(re.findall(r\"\\d+\", \"Bàn 3 gọi 2 ly\"))",
+  "output": "['3', '2']",
+  "lesson": "SY03 · Tìm và sửa mẫu văn bản bằng regex"
+ },
+ {
+  "id": "q35",
+  "group": "M5 · Python ứng dụng",
+  "name": "class / __init__",
+  "code": "class Mon:\n    def __init__(self, ten, gia):\n        self.ten = ten\n        self.gia = gia\n\nlatte = Mon(\"latte\", 45)\nprint(latte.ten, latte.gia)",
+  "output": "latte 45",
+  "lesson": "SY05 · Class và object: mỗi món có dữ liệu riêng"
+ },
+ {
+  "id": "q36",
+  "group": "M6 · Tiến trình và luồng",
+  "name": "threading.Thread",
+  "code": "from threading import Thread\n\ndef pha(mon):\n    print(\"pha\", mon)\n\nt = Thread(target=pha, args=(\"latte\",))\nt.start()\nt.join()",
+  "output": "pha latte",
+  "lesson": "CT10 · Tạo thread bằng target, start và join"
+ },
+ {
+  "id": "q37",
+  "group": "M6 · Tiến trình và luồng",
+  "name": "Lock",
+  "code": "from threading import Lock\nlock = Lock()\nso_coc = 0\nwith lock:\n    so_coc += 1\nprint(so_coc)",
+  "output": "1",
+  "lesson": "CT12 · Race condition, Lock và tránh deadlock"
+ },
+ {
+  "id": "q38",
+  "group": "M6 · Tiến trình và luồng",
+  "name": "queue.Queue",
+  "code": "from queue import Queue\nq = Queue()\nq.put(\"latte\")\nq.put(\"mocha\")\nprint(q.get(), q.qsize())",
+  "output": "latte 1",
+  "lesson": "CT13 · Queue và lưu pickle có nén ở nền"
+ }
+]

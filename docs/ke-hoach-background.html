@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kế hoạch nền cửa sổ</title>
+<style>
+  :root{
+    --bg:#f6f3fa; --panel:#ffffff; --ink:#221c2e; --mute:#6a6178; --line:#e4dcef; --accent:#7a4fd1; --accent-soft:#efe7ff;
+    --warm:#d9822b; --ok:#2f9e6b; --warn:#c2410c; --chip:#f1ecf8; --code:#f7f4fc;
+    --r:14px; --shadow:0 1px 2px rgba(30,20,50,.06),0 6px 24px rgba(30,20,50,.06);
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --bg:#110e18; --panel:#1b1626; --ink:#f2ecfa; --mute:#a99fba; --line:#2e2640; --accent:#b392ff; --accent-soft:#2a2140;
+    --warm:#f0a35a; --ok:#58c995; --warn:#ff8a5b; --chip:#241d33; --code:#16121f; --shadow:none;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#110e18; --panel:#1b1626; --ink:#f2ecfa; --mute:#a99fba; --line:#2e2640; --accent:#b392ff; --accent-soft:#2a2140;
+    --warm:#f0a35a; --ok:#58c995; --warn:#ff8a5b; --chip:#241d33; --code:#16121f; --shadow:none;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 16px 80px}
+  header.hero{display:grid;gap:10px;margin-bottom:22px}
+  .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-size:clamp(26px,4vw,38px);line-height:1.15;margin:0}
+  h2{font-size:22px;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+  h2 .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);font-size:15px}
+  h3{font-size:16px;margin:18px 0 6px}
+  p{margin:6px 0}
+  .lead{color:var(--mute);max-width:780px}
+  nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 26px}
+  nav.toc a{font-size:13px;color:var(--ink);text-decoration:none;background:var(--panel);border:1px solid var(--line);padding:6px 11px;border-radius:999px}
+  nav.toc a:hover{border-color:var(--accent)}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px;margin:0 0 18px;box-shadow:var(--shadow)}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .card{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg)}
+  .card b{display:block;margin-bottom:4px}
+  .tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--chip);color:var(--mute);margin-right:6px}
+  .tag.me{background:var(--accent-soft);color:var(--accent)}
+  .tag.you{background:color-mix(in srgb,var(--warm) 18%,transparent);color:var(--warm)}
+  .muted{color:var(--mute)}
+  ul{margin:6px 0 6px 20px;padding:0} li{margin:3px 0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);font-weight:600}
+  .scroll{overflow-x:auto}
+  code,.mono{font-family:ui-monospace,"JetBrains Mono",Consolas,monospace;font-size:13px}
+  code{background:var(--code);border:1px solid var(--line);padding:1px 5px;border-radius:6px}
+
+  /* layer stack diagram */
+  .stack{display:grid;gap:6px;margin-top:8px}
+  .layer{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--bg)}
+  .layer .z{font:600 12px ui-monospace,Consolas,monospace;color:var(--accent);text-align:center}
+  .layer .what b{display:inline}
+  .layer .mv{font-size:12px;color:var(--mute);white-space:nowrap}
+  .layer.room{border-style:dashed}
+  @media (max-width:560px){.layer{grid-template-columns:36px 1fr}.layer .mv{grid-column:2;white-space:normal}}
+
+  /* time-of-day previews */
+  .tod{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  @media (max-width:760px){.tod{grid-template-columns:repeat(2,1fr)}}
+  .sky{border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--panel)}
+  .sky .view{position:relative;height:150px}
+  .sky .view svg{position:absolute;left:0;right:0;bottom:0;width:100%;height:58%}
+  .sky .meta{padding:9px 11px}
+  .sky .meta b{display:block}
+  .sw{display:flex;gap:4px;margin-top:6px}
+  .sw i{flex:1;height:18px;border-radius:5px;border:1px solid rgba(0,0,0,.08);cursor:pointer;position:relative}
+  .sw i:hover::after{content:attr(data-c);position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font:11px ui-monospace,Consolas,monospace;padding:2px 5px;border-radius:5px;white-space:nowrap}
+
+  /* phases with checklists */
+  .phase{border:1px solid var(--line);border-radius:12px;margin:10px 0;background:var(--bg);overflow:hidden}
+  .phase summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:13px 14px}
+  .phase summary::-webkit-details-marker{display:none}
+  .phase .num{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:700}
+  .phase .t b{display:block}
+  .phase .t span{font-size:13px;color:var(--mute)}
+  .phase .prog{font:600 12px ui-monospace,Consolas,monospace;color:var(--mute);text-align:right}
+  .bar{height:4px;background:var(--line);border-radius:4px;margin-top:5px;width:90px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+  .phase .body{padding:0 16px 14px 60px}
+  @media (max-width:560px){.phase .body{padding:0 14px 14px}}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:4px 0}
+  .check input{margin-top:4px;accent-color:var(--ok);width:16px;height:16px;flex:none}
+  .check.done span{color:var(--mute);text-decoration:line-through}
+  .deliv{margin-top:8px;font-size:13px;color:var(--mute)}
+
+  /* prompts */
+  .prompt{border:1px solid var(--line);border-radius:12px;background:var(--code);margin:10px 0;overflow:hidden}
+  .prompt .head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .prompt .head b{font-size:14px}
+  .prompt pre{margin:0;padding:12px;white-space:pre-wrap;font:13px/1.55 ui-monospace,"JetBrains Mono",Consolas,monospace}
+  .prompt .note{padding:0 12px 10px;font-size:13px;color:var(--mute)}
+  button.copy{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer}
+  button.copy:hover{border-color:var(--accent)}
+  .callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+  .callout.warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+  .themebtn{position:fixed;right:16px;top:16px;font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;z-index:5}
+  footer{color:var(--mute);font-size:13px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<button class="themebtn" id="theme" aria-label="Đổi giao diện sáng/tối">◐ Giao diện</button>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Góc học PE · Kế hoạch</div>
+  <h1>Nền cửa sổ kiểu phim hoạt hình, phong cảnh thành phố theo bộ ảnh Gemini</h1>
+  <p class="lead">Giữ căn phòng 2D vẽ tay của PE. Thay cảnh ngoài cửa sổ bằng thành phố cao tầng như bộ ảnh Gemini, tách thành nhiều lớp chuyển động (multiplane), đổi màu theo 5 mốc giờ. Vật phẩm học tập hiện ở dạng 2D khi đứng yên và chuyển sang 3D khi người dùng tương tác.</p>
+</header>
+
+<nav class="toc" aria-label="Mục lục">
+  <a href="#chot">Đã chốt</a><a href="#lop">Cấu trúc lớp</a><a href="#gio">5 mốc giờ</a><a href="#gd">Các giai đoạn</a>
+  <a href="#prompt">Prompt Gemini</a><a href="#quycach">Quy cách file</a><a href="#vatpham">Vật phẩm 3D</a><a href="#nghiemthu">Nghiệm thu &amp; rủi ro</a>
+</nav>
+
+<section id="chot">
+  <h2><span class="n">1</span>Những gì đã chốt</h2>
+  <div class="grid g2">
+    <div class="card"><b>Căn phòng: giữ tranh 2D của PE</b>Không vẽ lại phòng. Toàn bộ chuyển động ngoài trời chỉ nằm sau ô kính (một mặt nạ), nên phòng không bao giờ bị vỡ.</div>
+    <div class="card"><b>Ngoài cửa sổ: thành phố kiểu Gemini</b>Nhà cao tầng ở xa, khu nhà vừa và cây ở giữa, mái nhà ở gần. Phòng thành căn hộ tầng cao nhìn ra phố.</div>
+    <div class="card"><b>Một bức phố duy nhất, nhiều lớp</b>Không thay 5 bức tranh khi đổi giờ. Giữ một bản phố và đổi bằng màu trời, lớp phủ màu và các mặt nạ ánh sáng (đèn cửa sổ, viền nắng).</div>
+    <div class="card"><b>Vật phẩm: 2D lúc nghỉ, 3D lúc tương tác</b>Laptop, điện thoại, sổ, cốc, cúp, sách trên giá chuyển sang 3D khi rê/bấm. Lịch và bảng ghim giữ 2D.</div>
+  </div>
+  <div class="callout warn"><b>Lưu ý về phối cảnh:</b> tranh phòng PE vẽ cửa sổ ngang tầm mắt và nhìn ra mái nhà thấp, còn bộ Gemini nhìn từ tầng cao. Khi tạo ảnh, đường chân trời phải đặt khoảng 45% chiều cao ô kính tính từ trên xuống, và đáy ô kính chỉ thấy mái nhà gần. Như vậy phố mới "đứng" đúng sau bậu cửa.</div>
+</section>
+
+<section id="lop">
+  <h2><span class="n">2</span>Cấu trúc lớp (multiplane)</h2>
+  <p class="muted">Xếp từ xa đến gần. Lớp xa trượt ít, lớp gần trượt nhiều hơn khi camera lắc nhẹ, nên có chiều sâu mà nét vẽ không méo.</p>
+  <div class="stack">
+    <div class="layer"><div class="z">L0</div><div class="what"><b>Bầu trời</b>: dải màu, sao, trăng, mặt trời, tia nắng. <span class="muted">Vẽ bằng code, không cần ảnh.</span></div><div class="mv">đổi màu theo giờ</div></div>
+    <div class="layer"><div class="z">L1</div><div class="what"><b>Mây xa</b>: dải mây mỏng, lặp ngang liền mạch.</div><div class="mv">trôi ~1 px/s</div></div>
+    <div class="layer"><div class="z">L2</div><div class="what"><b>Mây gần</b>: mây tích bồng bềnh như ảnh "Sáng".</div><div class="mv">trôi ~2–3 px/s</div></div>
+    <div class="layer"><div class="z">L3</div><div class="what"><b>Phố xa</b>: cụm cao ốc, tháp truyền hình. Mờ sương.</div><div class="mv">đứng yên · thị sai 2 px</div></div>
+    <div class="layer"><div class="z">L4</div><div class="what"><b>Phố giữa</b>: khu nhà vừa, cây xanh, đường phố.</div><div class="mv">thị sai 4 px</div></div>
+    <div class="layer"><div class="z">L5</div><div class="what"><b>Mái nhà gần</b>: mái, bể nước, ăng-ten, ống khói.</div><div class="mv">thị sai 7 px</div></div>
+    <div class="layer"><div class="z">M</div><div class="what"><b>Mặt nạ ánh sáng</b>: đèn cửa sổ / đèn đường (đêm), viền nắng (hoàng hôn), sương (sáng sớm).</div><div class="mv">bật dần từng nhà</div></div>
+    <div class="layer"><div class="z">FX</div><div class="what"><b>Hiệu ứng</b>: chim, máy bay, sao băng, vệt đèn xe, khói, mưa, cánh hoa.</div><div class="mv">sự kiện thưa</div></div>
+    <div class="layer room"><div class="z">P</div><div class="what"><b>Căn phòng 2D (PE)</b> và ô kính làm mặt nạ, cộng vệt sáng hắt vào phòng theo giờ.</div><div class="mv">không thay đổi</div></div>
+  </div>
+</section>
+
+<section id="gio">
+  <h2><span class="n">3</span>5 mốc giờ (màu lấy từ ảnh Gemini)</h2>
+  <p class="muted">Mỗi ô là 4 màu trời từ đỉnh xuống chân trời, rồi 2 màu phố. Rê chuột lên ô màu để xem mã. Giữa hai mốc chuyển dần trong 30–60 phút giờ ảo, không cắt cảnh.</p>
+  <div class="tod" id="tod"></div>
+  <div class="scroll" style="margin-top:14px">
+  <table>
+    <thead><tr><th>Mốc</th><th>Giờ</th><th>Điểm nhấn chuyển động</th><th>Mặt nạ bật</th></tr></thead>
+    <tbody>
+      <tr><td>Sáng sớm</td><td>05:00–07:00</td><td>Sương trôi dưới chân cao ốc, mặt trời ló, vài đèn cửa sổ còn sáng</td><td>Sương 70%, đèn 30%</td></tr>
+      <tr><td>Sáng</td><td>07:00–12:00</td><td>Mây tích trôi, chim bay ngang, máy bay kéo vệt khói</td><td>—</td></tr>
+      <tr><td>Chiều</td><td>12:00–17:00</td><td>Nắng nhạt vàng, mây mỏng, bóng nhà dài dần</td><td>Viền nắng 30%</td></tr>
+      <tr><td>Hoàng hôn</td><td>17:00–19:00</td><td>Mặt trời lặn sau cao ốc, tia nắng dọc, mây ửng cam tím, đèn bật dần</td><td>Viền nắng 100%, đèn 0→80%</td></tr>
+      <tr><td>Đêm</td><td>19:00–05:00</td><td>Trăng, trời sao, mây xanh mờ, đèn cửa sổ lấp lánh, vệt đèn xe, sao băng thỉnh thoảng</td><td>Đèn 100%</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="gd">
+  <h2><span class="n">4</span>Các giai đoạn</h2>
+  <p class="muted">Đánh dấu việc đã xong; tiến độ lưu trên trình duyệt của bạn. <span class="tag you">Bạn</span> = bạn làm, <span class="tag me">Claude</span> = tôi làm.</p>
+  <div id="phases"></div>
+</section>
+
+<section id="prompt">
+  <h2><span class="n">5</span>Prompt cho Gemini</h2>
+  <div class="callout"><b>Nguyên tắc để các lớp khớp nhau:</b> tạo <b>ảnh gốc P1</b> trước. Mọi prompt sau đều đính kèm P1 và yêu cầu "same composition, same camera". Gemini không xuất được nền trong suốt, nên các lớp cần tách dùng <b>nền xanh lá thuần #00FF00</b> để tách bằng màu (chroma key).</div>
+  <div id="prompts"></div>
+</section>
+
+<section id="quycach">
+  <h2><span class="n">6</span>Quy cách file</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>File</th><th>Kích thước (px)</th><th>Định dạng</th><th>Ghi chú</th></tr></thead>
+    <tbody>
+      <tr><td><code>city-far.webp</code></td><td>2400 × 1860</td><td>WebP + alpha</td><td>Rộng hơn ô kính ~1,5 lần để trượt không lộ mép</td></tr>
+      <tr><td><code>city-mid.webp</code></td><td>2400 × 1860</td><td>WebP + alpha</td><td>Phần bị lớp gần che phải được vẽ bù</td></tr>
+      <tr><td><code>city-near.webp</code></td><td>2600 × 1860</td><td>WebP + alpha</td><td>Mái nhà, bể nước, ăng-ten</td></tr>
+      <tr><td><code>lights-night.webp</code></td><td>2400 × 1860</td><td>WebP xám</td><td>Trắng = đèn sáng. Mỗi khung cửa một vệt riêng</td></tr>
+      <tr><td><code>rim-sunset.webp</code></td><td>2400 × 1860</td><td>WebP xám</td><td>Trắng = mép nhà được nắng chiều chiếu</td></tr>
+      <tr><td><code>clouds-near.webp</code></td><td>3200 × 900</td><td>WebP + alpha</td><td>Lặp ngang liền mạch (mép trái nối mép phải)</td></tr>
+      <tr><td><code>clouds-far.webp</code></td><td>3200 × 600</td><td>WebP + alpha</td><td>Mây mỏng, lặp ngang</td></tr>
+      <tr><td><code>fog-dawn.webp</code></td><td>2048 × 512</td><td>WebP xám</td><td>Dải sương, lặp ngang</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>Ô kính trong tranh phòng PE là <b>806 × 930 px</b> trên khung 2752 × 1536. Ảnh nền làm gấp 2 lần cho nét và chừa lề hai bên.</li>
+    <li>Tổng dung lượng nền nên dưới <b>6 MB</b> WebP. Bầu trời vẽ bằng code nên không tốn ảnh.</li>
+    <li>Đặt toàn bộ vào <code>web/public/assets/bg/</code>, đúng tên như bảng để tôi nối vào code.</li>
+  </ul>
+</section>
+
+<section id="vatpham">
+  <h2><span class="n">7</span>Vật phẩm: 2D lúc nghỉ, 3D lúc tương tác</h2>
+  <p class="muted">Lúc đứng yên dùng ảnh cắt sẵn trong PE (<code>items/*.webp</code>), khớp tuyệt đối với tranh. Rê chuột thì hòa sang mô hình 3D ở đúng tư thế đó; thả ra thì 3D về chỗ và hòa lại thành 2D.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Vật</th><th>Dạng</th><th>Khi tương tác</th></tr></thead>
+    <tbody>
+      <tr><td>Laptop</td><td>3D</td><td>Nhấc lên, nghiêng về phía người xem, màn hình chạy code thật</td></tr>
+      <tr><td>Sách trên giá (28 cuốn)</td><td>3D</td><td>Rút khỏi kệ, lật bìa, hiện tên bài</td></tr>
+      <tr><td>Cúp, huy chương</td><td>3D</td><td>Xoay nhẹ, ánh kim chạy qua, huy chương treo đung đưa</td></tr>
+      <tr><td>Sổ tay</td><td>3D</td><td>Mở ra, lật trang</td></tr>
+      <tr><td>Điện thoại</td><td>3D</td><td>Rung, lật ngửa, sáng màn hình</td></tr>
+      <tr><td>Cốc cà phê</td><td>3D + hơi 2D</td><td>Nhấc lên; hơi bốc mạnh hơn, nghiêng theo gió khi mở cửa sổ</td></tr>
+      <tr><td>Lịch</td><td>2D</td><td>Lật tờ, khoanh ngày học</td></tr>
+      <tr><td>Bảng ghim</td><td>2D</td><td>Lắc nhẹ, ghim nảy, giấy phất phơ</td></tr>
+    </tbody>
+  </table></div>
+  <p>Để 3D hợp tranh: dùng camera khớp phối cảnh (đã có), tô bóng kiểu cel và viền mực nâu (chế độ "Vẽ tay"), ánh sáng theo giờ, cộng bóng đổ tiếp xúc mềm dưới đáy vật.</p>
+</section>
+
+<section id="nghiemthu">
+  <h2><span class="n">8</span>Nghiệm thu &amp; rủi ro</h2>
+  <div class="grid g2">
+    <div class="card"><b>Tiêu chí nghiệm thu</b>
+      <ul>
+        <li>Rê chuột hết cỡ không lộ mép hay lỗ ở lớp nào.</li>
+        <li>Kéo thanh giờ từ 0 → 24 không có bước "nhảy" cảnh.</li>
+        <li>Đèn cửa sổ bật lác đác, lệch thời điểm, không bật cùng lúc.</li>
+        <li>Đặt cạnh tranh phòng PE thấy cùng một tay vẽ (dùng thanh so sánh).</li>
+        <li>Từ 55 khung hình/giây trở lên trên laptop đồ họa tích hợp; ảnh nền dưới 6 MB.</li>
+        <li>Bật "giảm chuyển động" của hệ điều hành thì nền đứng yên, chỉ đổi màu.</li>
+      </ul>
+    </div>
+    <div class="card"><b>Rủi ro và cách xử lý</b>
+      <ul>
+        <li><b>Gemini không giữ nhất quán giữa các lần tạo:</b> luôn đính kèm P1. Nếu vẫn lệch, chỉ dùng P1 rồi tự tách lớp.</li>
+        <li><b>Nét Gemini sắc hơn tranh PE:</b> làm mềm nhẹ, giảm tương phản đường nét, ám tím cho đồng tông.</li>
+        <li><b>Phố tầng cao lệch phối cảnh với phòng:</b> chỉnh đường chân trời và cỡ nhà ngay ở bước P1, trước khi tách lớp.</li>
+        <li><b>Bản quyền ảnh AI:</b> kiểm tra điều khoản của Gemini nếu dùng cho sản phẩm thương mại.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>Kế hoạch cho dự án <b>Góc học PE · 3D</b> · nền hiện tại nằm ở <code>web/src/outside.js</code> (chế độ "Tranh 2D") và sẽ được thay bằng bộ lớp mới.</footer>
+</div>
+
+<script>
+/* ---------- theme toggle ---------- */
+(() => {
+  const root = document.documentElement, KEY = 'pe-plan-theme';
+  try { const t = localStorage.getItem(KEY); if (t) root.dataset.theme = t; } catch (e) {}
+  document.getElementById('theme').addEventListener('click', () => {
+    const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+    try { localStorage.setItem(KEY, root.dataset.theme); } catch (e) {}
+  });
+})();
+
+/* ---------- time-of-day previews (colours sampled from the Gemini sheet) ---------- */
+const TOD = [
+  { n: 'Sáng sớm', h: '05:00–07:00', sky: ['#35689c', '#497cab', '#c8a9bb', '#f6bfa7'], city: ['#7291b3', '#384f6c'], note: 'Sương, đèn còn sáng' },
+  { n: 'Sáng', h: '07:00–12:00', sky: ['#59add7', '#5aadd8', '#9dd7ed', '#cdeff3'], city: ['#8cadc5', '#a9918b'], note: 'Mây tích, chim bay' },
+  { n: 'Chiều', h: '12:00–17:00', sky: ['#8ccde0', '#9fd3e0', '#d2e6da', '#f4edc6'], city: ['#afb4a9', '#b89b80'], note: 'Nắng nhạt vàng' },
+  { n: 'Hoàng hôn', h: '17:00–19:00', sky: ['#72609e', '#b2699d', '#fb9579', '#fbcc84'], city: ['#8b5164', '#2d2035'], note: 'Tia nắng, đèn bật dần' },
+  { n: 'Đêm', h: '19:00–05:00', sky: ['#143b73', '#16407d', '#225aa1', '#6772b2'], city: ['#554a5f', '#182a49'], note: 'Trăng, sao, phố lên đèn' },
+];
+const skyline = (a, b, lit) => {
+  const far = 'M0 60 L0 34 L8 34 L8 18 L16 18 L16 34 L26 34 L26 10 L36 10 L36 34 L46 34 L46 26 L56 26 L56 6 L64 6 L64 34 L76 34 L76 22 L86 22 L86 34 L100 34 L100 60Z';
+  const near = 'M0 60 L0 44 L10 44 L10 38 L22 38 L22 46 L34 46 L34 40 L48 40 L48 48 L60 48 L60 36 L72 36 L72 44 L86 44 L86 40 L100 40 L100 60Z';
+  let dots = '';
+  if (lit) for (let i = 0; i < 26; i++) { const x = 3 + (i * 37) % 94, y = 16 + (i * 53) % 40; dots += `<rect x="${x}" y="${y}" width="1.6" height="1.6" fill="#ffd27a" opacity="${.5 + (i % 3) * .2}"/>`; }
+  return `<svg viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path d="${far}" fill="${a}" opacity=".85"/>${dots}<path d="${near}" fill="${b}"/></svg>`;
+};
+document.getElementById('tod').innerHTML = TOD.map((t, i) => `
+  <div class="sky">
+    <div class="view" style="background:linear-gradient(180deg,${t.sky[0]} 0%,${t.sky[1]} 30%,${t.sky[2]} 62%,${t.sky[3]} 100%)">${skyline(t.city[0], t.city[1], i === 0 || i >= 3)}</div>
+    <div class="meta"><b>${t.n}</b><span class="muted" style="font-size:13px">${t.h} · ${t.note}</span>
+      <div class="sw">${[...t.sky, ...t.city].map(c => `<i style="background:${c}" data-c="${c}" title="${c}"></i>`).join('')}</div>
+    </div>
+  </div>`).join('');
+
+/* ---------- phases ---------- */
+const PHASES = [
+  { t: 'Chốt khung và quy cách', who: 'me', d: '0,5 ngày', items: [
+    'Xuất ảnh ô kính của phòng PE (806 × 930 px) kèm đường chân trời gợi ý để làm khung tham chiếu cho Gemini',
+    'Cố định 5 mốc giờ và bảng màu (mục 3)',
+    'Tạo thư mục web/public/assets/bg/ và file mẫu tên lớp'],
+    out: 'Khung tham chiếu + quy cách file' },
+  { t: 'Tạo ảnh lớp bằng Gemini', who: 'you', d: '1–2 ngày', items: [
+    'Tạo ảnh gốc P1 (phố ban ngày, ánh sáng trung tính, không khung cửa, không đồ vật)',
+    'Duyệt P1 với phòng: đường chân trời ~45%, nhìn qua thanh so sánh',
+    'Tạo P2–P4: phố xa / phố giữa / mái nhà gần trên nền xanh #00FF00',
+    'Tạo mặt nạ P5 (đèn đêm) và P6 (viền nắng hoàng hôn)',
+    'Tạo dải mây P7, P8 và dải sương P9 (lặp ngang)'],
+    out: 'Ảnh thô của các lớp' },
+  { t: 'Tách lớp, vẽ bù, xuất file', who: 'both', d: '1 ngày', items: [
+    'Tách nền xanh, làm mềm viền 1–2 px',
+    'Vẽ bù phần bị lớp gần che (generative fill) để trượt không lộ lỗ',
+    'Kiểm tra mây/sương lặp liền mạch (nối mép trái–phải)',
+    'Làm mềm nét và ám tím nhẹ cho đồng tông tranh PE',
+    'Xuất WebP đúng tên và kích thước ở mục 6'],
+    out: 'Bộ lớp sạch trong assets/bg/' },
+  { t: 'Dựng multiplane trên web', who: 'me', d: '1–1,5 ngày', items: [
+    'Thay lớp phố PE trong chế độ "Tranh 2D" bằng 3 lớp phố mới, mỗi lớp một độ sâu',
+    'Dải mây trôi 2 tầng, tốc độ khác nhau',
+    'Tô màu 5 mốc giờ: dải trời + lớp phủ màu cho phố, chuyển dần 30–60 phút',
+    'Mặt nạ đèn: bật lác đác theo từng ô, có quầng sáng; viền nắng hoàng hôn',
+    'Thị sai theo chuột và lắc nhẹ, giới hạn để không lộ mép'],
+    out: 'Nền mới chạy trên web, đổi giờ mượt' },
+  { t: 'Hiệu ứng điện ảnh và ánh sáng hắt vào phòng', who: 'me', d: '1 ngày', items: [
+    'Sáng sớm: sương trôi dưới chân cao ốc',
+    'Hoàng hôn: mặt trời lặn sau cao ốc, tia nắng dọc (như ảnh Gemini)',
+    'Đêm: vệt đèn xe trên đường, đèn đỏ đỉnh tháp nhấp nháy, sao băng thưa',
+    'Ngày: chim, máy bay; mưa và cánh hoa giữ như hiện tại',
+    'Vệt sáng hình ô cửa hắt lên tường/bàn và tông màu phòng đổi theo giờ',
+    'Hạt nhiễu mịn + bloom nhẹ cho toàn khung'],
+    out: 'Cảnh "chill", có không khí phim' },
+  { t: 'Vật phẩm 2D ↔ 3D', who: 'me', d: '2–3 ngày', items: [
+    'Đặt các ảnh cắt items/*.webp của PE làm trạng thái nghỉ',
+    'Khớp tư thế mô hình Blender với từng ảnh cắt',
+    'Hòa 2D → 3D khi rê, 3D → 2D khi thả; giữ đúng vị trí',
+    'Diễn hoạt tương tác (mục 7) + bóng đổ tiếp xúc',
+    'Bake lại ánh sáng cho mô hình theo bố cục cuối'],
+    out: 'Vật phẩm tương tác 3D trên nền 2D' },
+  { t: 'Tinh chỉnh và nghiệm thu', who: 'both', d: '0,5–1 ngày', items: [
+    'Chạy đủ tiêu chí ở mục 8',
+    'Đo khung hình/giây và dung lượng tải',
+    'Kiểm tra trên màn hình hẹp và chế độ giảm chuyển động',
+    'Bạn duyệt cuối từng mốc giờ'],
+    out: 'Bản hoàn chỉnh' },
+];
+const WHO = { me: '<span class="tag me">Claude</span>', you: '<span class="tag you">Bạn</span>', both: '<span class="tag you">Bạn</span><span class="tag me">Claude</span>' };
+const KEY = 'pe-plan-checks';
+let done = {};
+try { done = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { done = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} };
+const ph = document.getElementById('phases');
+ph.innerHTML = PHASES.map((p, i) => `
+  <details class="phase" ${i < 2 ? 'open' : ''}>
+    <summary>
+      <div class="num">${i}</div>
+      <div class="t"><b>${p.t}</b><span>${p.d} · ${WHO[p.who]}</span></div>
+      <div class="prog"><span data-p="${i}">0/${p.items.length}</span><div class="bar"><i data-b="${i}"></i></div></div>
+    </summary>
+    <div class="body">
+      ${p.items.map((t, j) => `<label class="check" data-k="${i}-${j}"><input type="checkbox" data-k="${i}-${j}"><span>${t}</span></label>`).join('')}
+      <div class="deliv">Kết quả: ${p.out}</div>
+    </div>
+  </details>`).join('');
+const refresh = () => PHASES.forEach((p, i) => {
+  const n = p.items.filter((_, j) => done[`${i}-${j}`]).length;
+  ph.querySelector(`[data-p="${i}"]`).textContent = `${n}/${p.items.length}`;
+  ph.querySelector(`[data-b="${i}"]`).style.width = (n / p.items.length * 100) + '%';
+});
+ph.querySelectorAll('input[type=checkbox]').forEach(cb => {
+  const k = cb.dataset.k; cb.checked = !!done[k];
+  cb.closest('.check').classList.toggle('done', cb.checked);
+  cb.addEventListener('change', () => { done[k] = cb.checked; cb.closest('.check').classList.toggle('done', cb.checked); save(); refresh(); });
+});
+refresh();
+
+/* ---------- Gemini prompts ---------- */
+const STYLE = 'Soft painterly anime film background, lo-fi mood, gentle lavender shadows, clean thin line art, slightly hazy distance, no text, no watermark.';
+const PROMPTS = [
+  { id: 'P1', t: 'Ảnh gốc: phố ban ngày, ánh sáng trung tính', note: 'Đính kèm ảnh "Sáng" của bộ Gemini làm mẫu phong cách. Đây là ảnh mọi lớp sau dựa vào.',
+    p: `Anime background painting of a city seen from an apartment window on the 8th floor. Eye-level camera, horizon at 45% from the top. Far: a cluster of high-rise towers and a slim TV tower, hazy. Middle: mid-rise apartment blocks, small offices, street trees, one street going into the distance. Near (bottom 25%): flat rooftops with water tanks, antennas, AC units. Even neutral daylight, no sun, no strong shadows, plain pale blue sky with NO clouds. No window frame, no interior, no plants or objects in the foreground, no people. Wide canvas 4:3, extra city on the left and right edges. ${STYLE}` },
+  { id: 'P2', t: 'Lớp phố xa', note: 'Đính kèm P1. Trả về chỉ cụm cao ốc xa trên nền xanh.',
+    p: `Same composition and same camera as the attached image. Keep ONLY the far high-rise towers and TV tower exactly as they are. Replace everything else (sky, middle buildings, rooftops) with solid pure green #00FF00. Do not move or redraw the towers. ${STYLE}` },
+  { id: 'P3', t: 'Lớp phố giữa', note: 'Đính kèm P1. Phần bị mái gần che cần được vẽ bù.',
+    p: `Same composition and same camera as the attached image. Keep ONLY the middle layer: mid-rise apartment blocks, offices, street trees and the street. Complete any parts that were hidden behind the near rooftops so the buildings continue naturally to the bottom. Replace the sky, the far towers and the near rooftops with solid pure green #00FF00. ${STYLE}` },
+  { id: 'P4', t: 'Lớp mái nhà gần', note: 'Đính kèm P1.',
+    p: `Same composition and same camera as the attached image. Keep ONLY the nearest rooftops at the bottom with their water tanks, antennas and AC units, extended slightly wider on both sides. Replace everything else with solid pure green #00FF00. ${STYLE}` },
+  { id: 'P5', t: 'Mặt nạ đèn ban đêm', note: 'Đính kèm P1. Ảnh đen trắng: trắng/vàng là đèn.',
+    p: `Same composition and same camera as the attached image, at night. Paint every building, the sky and the ground pure black. Only the light sources glow: lit apartment windows (about half of them, scattered, some with warm curtains), street lights along the street, a red blinking light on top of the tallest tower, car light trails on the street. Warm yellow-orange lights on pure black, no other colours.` },
+  { id: 'P6', t: 'Mặt nạ viền nắng hoàng hôn', note: 'Đính kèm P1.',
+    p: `Same composition and same camera as the attached image. Paint everything pure black except the golden-hour sunlight hitting the building edges and facades that face the right side, as if the sun is setting low on the right behind the towers. The lit parts are warm orange-white on pure black.` },
+  { id: 'P7', t: 'Dải mây gần (lặp ngang)', note: 'Không cần đính kèm. Sau đó kiểm tra mép trái nối liền mép phải.',
+    p: `A horizontal, seamlessly tileable strip of fluffy cumulus clouds for an anime film background, 4:1 ratio. Clouds lit softly from the upper right, white with lavender-blue shadows, flat painted bases, a few small puffs between big ones. The left edge must continue seamlessly into the right edge. Solid pure green #00FF00 background. ${STYLE}` },
+  { id: 'P8', t: 'Dải mây xa (lặp ngang)', note: 'Dùng cho hoàng hôn và ban đêm (được tô màu lại bằng code).',
+    p: `A horizontal, seamlessly tileable strip of thin, stretched stratus and wispy clouds, light grey on solid pure green #00FF00, 5:1 ratio, soft edges, no sky colour. The left edge must continue seamlessly into the right edge. ${STYLE}` },
+  { id: 'P9', t: 'Dải sương sáng sớm (lặp ngang)', note: 'Ảnh xám: trắng = sương dày.',
+    p: `A horizontal, seamlessly tileable band of soft low morning fog, white on pure black, 4:1 ratio, densest in the middle band and fading up and down, gentle wisps, no hard edges. The left edge must continue seamlessly into the right edge.` },
+];
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+document.getElementById('prompts').innerHTML = PROMPTS.map(p => `
+  <div class="prompt">
+    <div class="head"><b>${p.id} · ${p.t}</b><button class="copy" data-id="${p.id}">Sao chép</button></div>
+    <pre id="pr-${p.id}">${esc(p.p)}</pre>
+    <div class="note">${p.note}</div>
+  </div>`).join('');
+document.getElementById('prompts').addEventListener('click', async e => {
+  const b = e.target.closest('button.copy'); if (!b) return;
+  const text = document.getElementById('pr-' + b.dataset.id).textContent;
+  try { await navigator.clipboard.writeText(text); b.textContent = 'Đã chép ✓'; }
+  catch (err) { const r = document.createRange(); r.selectNodeContents(document.getElementById('pr-' + b.dataset.id)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = 'Đã chọn, nhấn Ctrl+C'; }
+  setTimeout(() => b.textContent = 'Sao chép', 1800);
+});
+</script>
+</body>
+</html>
