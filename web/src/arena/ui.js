@@ -5,6 +5,7 @@
 // Chế độ thứ hai "Đoán output" (từ máy tính Góc học của pe-usth) nằm ở quiz.js; ui.js chỉ đổi qua lại hai chế độ.
 import * as E from './engine.js';
 import * as Q from './quiz.js';
+import * as O from './offline.js';
 import { grade, warmUp, isLoaded, onLoadState } from './grader.js';
 
 const DIFF = { easy: 'Dễ', medium: 'Trung bình' };
@@ -33,6 +34,11 @@ let view = '', tab = 'problems', lastStatus = null, runOut = null, busy = false,
 const MODE_KEY = 'pe-arena-mode';
 let mode = (() => { try { return localStorage.getItem(MODE_KEY) === 'quiz' ? 'quiz' : 'code'; } catch { return 'code'; } })();
 function setMode(m) { mode = m; try { localStorage.setItem(MODE_KEY, m); } catch { /* bỏ qua */ } render(true); }
+// Trận đấu code đang chạy đến từ đâu: engine offline (đấu với máy) khi có trận với máy, còn lại là server.
+const src = () => (O.active() ? O : E);
+const snap = () => src().snapshot();
+/** Đấu code với máy: chạy trên trình duyệt, không cần máy chủ (offline.js). */
+const startBot = (problemId) => doAct(async () => { O.start(problemId, { rating: E.snapshot().me.rating, name: ctx.playerName }); });
 
 /* ================= mount ================= */
 export function mount(el, options = {}) {
@@ -43,12 +49,13 @@ export function mount(el, options = {}) {
   void E.start(); // tạo/khôi phục phiên khách, nạp hồ sơ + trận đang dở
   warmUp(); // nạp Pyodide sẵn trong nền
   unload = onLoadState(() => updatePy());
-  unsub = E.subscribe(() => render());
+  const u1 = E.subscribe(() => render()), u2 = O.subscribe(() => render());
+  unsub = () => { u1(); u2(); };
   view = ''; lastStatus = null; runOut = null;
   render(true);
   timer = setInterval(() => {
     if (!root || !root.isConnected) return unmount();
-    E.poll();
+    E.poll(); O.poll();
     tickUI();
   }, 500);
 }
@@ -60,8 +67,9 @@ export function unmount() {
 }
 /** Tóm tắt cho menu bên ngoài phòng. */
 export function status() {
-  const s = E.poll();
+  const s = O.active() ? O.poll() : E.poll();
   const m = s.match;
+  if (m?.offline && m.status === 'active') return { text: `Đấu với máy · còn ${clock((m.deadlineAt - Date.now()) / 1000)}`, live: true, me: s.me };
   if (m?.status === 'active') return { text: `Đang đấu · còn ${clock((m.deadlineAt - Date.now()) / 1000)}`, live: true, me: s.me };
   if (m?.status === 'waiting') return { text: m.isPublic ? 'Đang tìm đối thủ…' : `Phòng ${m.code} · chờ bạn vào`, live: true, me: s.me };
   const qs = Q.status(); if (qs) return { ...qs, me: s.me };
@@ -76,7 +84,7 @@ const $ = (s) => root?.querySelector(s);
 /* ================= render ================= */
 function render(force) {
   if (!root) return;
-  const s = E.snapshot();
+  const s = snap();
   const m = s.match;
   const codeLive = m && (m.status === 'waiting' || m.status === 'active');
   if (Q.hasLive() && !codeLive) mode = 'quiz';
@@ -94,7 +102,7 @@ function render(force) {
   } else if (next === 'lobby') {
     $('#arHead').innerHTML = headStats(s.me);
     const c = $('#arConn'); const ch = connHTML(s); if (c && c.dataset.k !== ch) { c.dataset.k = ch; c.innerHTML = ch; wireConn(); }
-    fillTab();
+    fillTab(); lockOnline(s);
   } else if (next === 'match') {
     updateMatch(s);
   } else if (next === 'result') {
@@ -115,7 +123,7 @@ function updatePy() { const c = $('#arPy'); if (c) { c.classList.toggle('ok', is
 
 /* ---------- sảnh ---------- */
 function connHTML(s) {
-  if (s.conn === 'offline') return `<div class="ar-conn bad"><b>Chưa kết nối được máy chủ Arena.</b><span>${esc(s.error || '')} Hãy chạy backend (<code>npm --prefix server run start:dev</code>) rồi thử lại.</span><button class="btn ghost" id="arRetry">Thử lại</button></div>`;
+  if (s.conn === 'offline') return `<div class="ar-conn bad"><b>Offline · chưa kết nối được máy chủ Arena.</b><span>Đấu online tạm khoá, nhưng bạn vẫn <b>đấu với máy</b> được ngay (chấm bài trên trình duyệt). Muốn đấu online: chạy backend (<code>npm --prefix server run start:prod</code>) rồi bấm Thử lại.</span><button class="btn ghost" id="arRetry">Thử lại</button></div>`;
   if (s.conn !== 'ok') return `<div class="ar-conn"><span class="ar-spin"></span><span>Đang kết nối máy chủ Arena…</span></div>`;
   return '';
 }
@@ -145,17 +153,18 @@ function lobbyHTML(s) {
       <div class="ar-rays" aria-hidden="true"></div>
       <div class="eyebrow">Arena · Python</div>
       <h2>Tìm đối thủ</h2>
-      <p>Vào hàng chờ công khai: gặp ngay người đang chờ, hoặc mở phòng mới cho người kế tiếp. Đề ngẫu nhiên, đua giải trước khi hết giờ.</p>
-      <div class="ar-cta"><button class="btn ar-go" id="arQueue">${ico('play')}Tìm trận ngay</button>${pyChip()}</div>
+      <p>Cùng một đề Python, đua giải trước khi hết giờ. Đấu online với người thật, hoặc đấu với máy ngay cả khi offline.</p>
+      <div class="ar-cta"><button class="btn ar-go" id="arQueue" data-online>${ico('play')}Đấu online</button><button class="btn ar-bot" id="arBot">Đấu với máy · offline</button>${pyChip()}</div>
       <div class="ar-room-row">
-        <button class="btn ghost" id="arCreate">Tạo phòng riêng</button>
-        <form id="arJoin" class="ar-join"><input id="arJoinCode" maxlength="8" placeholder="Mã phòng" autocomplete="off" spellcheck="false" aria-label="Mã phòng 4–8 ký tự"><button class="btn ghost" type="submit">Vào phòng</button></form>
+        <button class="btn ghost" id="arCreate" data-online>Tạo phòng riêng</button>
+        <form id="arJoin" class="ar-join"><input id="arJoinCode" maxlength="8" placeholder="Mã phòng" autocomplete="off" spellcheck="false" aria-label="Mã phòng 4–8 ký tự" data-online><button class="btn ghost" type="submit" data-online>Vào phòng</button></form>
       </div>
       <ul class="ar-rules">
         <li><b>Thắng ngay</b> khi bài nộp đúng hết bộ test (có test ẩn, chấm trên máy chủ).</li>
         <li><b>Hết giờ</b>: ai đúng nhiều test hơn thắng; bằng nhau thì ai nộp bài đó sớm hơn.</li>
         <li><b>Nộp bài</b> tối đa 10 lần, cách nhau ít nhất 10 giây. <b>Chạy thử</b> thì không giới hạn.</li>
         <li><b>Đầu hàng</b> trước 60 giây, hoặc khi đối thủ chưa đúng test nào: không tính điểm.</li>
+        <li><b>Với máy</b>: bot cùng tầm Elo, chấm bài ngay trên trình duyệt; trận luyện, không tính Elo.</li>
       </ul>
     </section>
     <section class="ar-panel glass">
@@ -173,11 +182,11 @@ function fillTab() {
   const el = $('#arTab'); if (!el) return;
   let html;
   if (tab === 'problems') {
-    const list = E.problems();
-    html = list.length ? `<ul class="ar-list">${list.map((p) => `<li><span class="ar-dot ${p.difficulty}"></span>
+    const online = E.snapshot().conn === 'ok';
+    const list = E.problems().length ? E.problems() : O.problems(); // offline: kho đề đóng gói sẵn
+    html = `<ul class="ar-list ar-probs">${list.map((p) => `<li><span class="ar-dot ${p.difficulty}"></span>
       <span><b>${esc(p.title)}</b><small>${DIFF[p.difficulty] || p.difficulty} · ${minutes(p.durationSec)}${p.testCount ? ` · ${p.testCount} test` : ''}</small></span>
-      <button class="btn ghost" data-challenge="${esc(p.id)}" title="Tạo phòng riêng với đề này rồi gửi mã cho bạn">Tạo phòng</button></li>`).join('')}</ul>`
-      : `<p class="ar-empty">${E.snapshot().conn === 'offline' ? 'Chưa tải được kho đề.' : 'Đang tải kho đề…'}</p>`;
+      <span class="ar-pbtn"><button class="btn ghost" data-bot="${esc(p.id)}" title="Đấu đề này với máy (offline)">Với máy</button><button class="btn ghost" data-challenge="${esc(p.id)}" data-online ${online ? '' : 'disabled'} title="Tạo phòng riêng với đề này rồi gửi mã cho bạn">Tạo phòng</button></span></li>`).join('')}</ul>`;
   } else if (tab === 'history') {
     const h = E.history();
     html = h.length ? `<ul class="ar-list">${h.map((x) => `<li><span class="ar-res ${x.outcome}">${x.outcome === 'win' ? 'Thắng' : x.outcome === 'loss' ? 'Thua' : 'Hoà'}</span>
@@ -194,6 +203,7 @@ function fillTab() {
   if (html === tabKey && el.innerHTML) return; // không vẽ lại khi không đổi (giữ focus/hover)
   tabKey = html; el.innerHTML = html;
   el.querySelectorAll('[data-challenge]').forEach((b) => b.addEventListener('click', () => doAct(() => E.createRoom(b.dataset.challenge))));
+  el.querySelectorAll('[data-bot]').forEach((b) => b.addEventListener('click', () => startBot(b.dataset.bot)));
 }
 
 /* ---------- chờ ghép trận / chờ bạn vào phòng ---------- */
@@ -202,10 +212,10 @@ function waitingHTML(s) {
   const room = !m.isPublic;
   return `<div class="ar-wait">
     <div class="ar-radar" aria-hidden="true"><i></i><i></i><i></i><span>${esc(initials(s.me.name || 'Bạn'))}</span></div>
-    <h2>${room ? 'Phòng riêng đã mở' : 'Đang tìm đối thủ…'}</h2>
+    <h2>${m.offline ? 'Máy đang vào trận…' : room ? 'Phòng riêng đã mở' : 'Đang tìm đối thủ…'}</h2>
     ${room ? `<p>Gửi mã này cho bạn cùng đấu, họ bấm “Vào phòng” và nhập mã:</p>
     <div class="ar-code"><b aria-label="Mã phòng ${esc(m.code.split('').join(' '))}">${esc(m.code)}</b><button class="btn ghost" id="arCopy">Chép mã</button></div>` : ''}
-    <p>Đề hiện ra khi trận bắt đầu · Elo của bạn ${s.me.rating}</p>
+    <p>${m.offline ? 'Đấu với máy · offline · không tính Elo' : `Đề hiện ra khi trận bắt đầu · Elo của bạn ${s.me.rating}`}</p>
     <p class="ar-mono" id="arWaitT">0:00</p>
     <div class="ar-cta">${pyChip()}<button class="btn ghost" id="arCancel">${room ? 'Đóng phòng' : 'Huỷ tìm'}</button></div>
   </div>`;
@@ -279,13 +289,14 @@ function resultHTML(s) {
       <span class="x">vs</span>
       <div><span class="av" style="background:${o.color}">${esc(initials(o.name))}</span><b>${r.opponentBestPassed}/${r.total}</b><small>${esc(o.name)}</small></div></div>
     <div class="ar-gain" id="arGain">${gainHTML(s)}</div>
-    ${r.unscored ? '<p>Đầu hàng quá sớm hoặc người thắng chưa đúng test nào nên không cộng trừ điểm.</p>' : ''}
+    ${r.unscored && !r.practice ? '<p>Đầu hàng quá sớm hoặc người thắng chưa đúng test nào nên không cộng trừ điểm.</p>' : ''}
     <div class="ar-cta"><button class="btn ar-go" id="arAgain">${ico('play')}Đấu trận mới</button><button class="btn ghost" id="arLobby">Về sảnh</button></div>
   </div>`;
 }
 
 function gainHTML(s) {
   const r = s.match.result;
+  if (r.practice) return '<span class="pill glass">Trận luyện với máy · offline · không tính Elo</span>';
   return r.unscored ? '<span class="pill glass">Trận không tính điểm</span>'
     : `<span class="pill glass ${r.myRatingDelta >= 0 ? 'up' : 'down'}"><b>${delta(r.myRatingDelta)}</b>&nbsp;Elo → ${s.me.rating}</span><span class="pill glass"><b>+${r.myXp}</b>&nbsp;XP</span>`;
 }
@@ -298,6 +309,8 @@ function wire(v, s) {
   } else if (v === 'lobby') {
     wireConn(); wireMode();
     $('#arQueue').addEventListener('click', () => doAct(() => E.queue()));
+    $('#arBot').addEventListener('click', () => startBot());
+    lockOnline(s);
     $('#arCreate').addEventListener('click', () => doAct(() => E.createRoom()));
     $('#arJoin').addEventListener('submit', (ev) => {
       ev.preventDefault();
@@ -312,7 +325,7 @@ function wire(v, s) {
     }));
     tabKey = ''; fillTab();
   } else if (v === 'waiting') {
-    $('#arCancel').addEventListener('click', () => doAct(() => E.cancel(), s.match.isPublic ? 'Đã huỷ tìm trận' : 'Đã đóng phòng'));
+    $('#arCancel').addEventListener('click', () => doAct(() => src().cancel(), s.match.offline ? '' : s.match.isPublic ? 'Đã huỷ tìm trận' : 'Đã đóng phòng'));
     $('#arCopy')?.addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(s.match.code); toast(`Đã chép mã phòng ${s.match.code}`); } catch { toast(`Mã phòng: ${s.match.code}`); }
     });
@@ -329,8 +342,9 @@ function wire(v, s) {
     $('#arForfeit').addEventListener('click', onForfeit);
   } else if (v === 'result') {
     clearDraft(s.match.id);
-    $('#arAgain').addEventListener('click', () => { E.dismiss(); doAct(() => E.queue()); });
-    $('#arLobby').addEventListener('click', () => { E.dismiss(); });
+    const off = !!s.match.offline;
+    $('#arAgain').addEventListener('click', () => { src().dismiss(); if (off) startBot(); else doAct(() => E.queue()); });
+    $('#arLobby').addEventListener('click', () => { src().dismiss(); });
     const card = root.querySelector('.ar-result');
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) card.animate([{ opacity: 0, transform: 'scale(.92) translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 600, easing: 'cubic-bezier(.22,1,.36,1)' });
   }
@@ -344,6 +358,12 @@ async function doAct(fn, okMsg) {
   try { await fn(); if (okMsg) toast(okMsg); } catch (e) { toast(e.message); }
   busy = false;
   root?.querySelectorAll('.ar-lobby .btn, .ar-wait .btn').forEach((b) => { b.disabled = false; });
+  lockOnline(E.snapshot());
+}
+/** Không có máy chủ: khoá các nút cần server, giữ nút đấu với máy. */
+function lockOnline(s) {
+  const off = s.conn !== 'ok';
+  root?.querySelectorAll('[data-online]').forEach((b) => { b.disabled = off || busy; b.title = off ? 'Cần máy chủ Arena — đang offline' : ''; });
 }
 
 function onKey(e) {
@@ -370,12 +390,12 @@ function onKey(e) {
 }
 
 async function onRun() {
-  const s = E.snapshot(); const m = s.match;
+  const s = snap(); const m = s.match;
   if (!m || m.status !== 'active' || busy) return;
   const p = m.problem;
   busy = true; setBtns();
   runOut = `<small>Chạy thử</small><pre class="ar-hint">${isLoaded() ? 'Đang chạy…' : 'Đang nạp Python (lần đầu mất vài giây)…'}</pre>`;
-  updateMatch(E.snapshot());
+  updateMatch(snap());
   try {
     const r = await grade($('#arCode')?.value ?? '', p.examples, { perTestMs: 2000 });
     if (r.status !== 'graded') runOut = `<small>Chạy thử</small><pre class="ar-err">${r.status === 'rejected' ? 'Mã bị từ chối: ' : ''}${esc(r.message)}</pre>`;
@@ -386,16 +406,16 @@ async function onRun() {
     runOut = `<small>Chạy thử</small><pre class="ar-err">${esc(e.message)}</pre>`;
   }
   busy = false;
-  if (view === 'match') { updateMatch(E.snapshot()); setBtns(); }
+  if (view === 'match') { updateMatch(snap()); setBtns(); }
 }
 
 async function onSubmit() {
-  const m = E.snapshot().match;
+  const m = snap().match;
   if (!m || m.status !== 'active' || busy) return;
   const code = $('#arCode')?.value ?? '';
   busy = true; setBtns();
   try {
-    const r = await E.submit(code);
+    const r = await src().submit(code);
     const x = r.submission;
     if (x.status === 'graded') toast(x.passed === x.total ? 'Đúng hết bộ test!' : `Đúng ${x.passed}/${x.total} test`);
     else toast(x.status === 'rejected' ? 'Mã bị từ chối khi kiểm tra' : (x.message || 'Có lỗi khi chấm'));
@@ -407,14 +427,14 @@ async function onSubmit() {
 }
 
 function onForfeit() {
-  const m = E.snapshot().match; if (!m || m.status !== 'active') return;
+  const m = snap().match; if (!m || m.status !== 'active') return;
   const b = $('#arForfeit');
   if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Bấm lần nữa để đầu hàng'; setTimeout(() => { if (b.isConnected) { b.dataset.sure = ''; b.textContent = 'Đầu hàng'; } }, 3000); return; }
-  E.forfeit().catch((e) => toast(e.message));
+  src().forfeit().catch((e) => toast(e.message));
 }
 
 function setBtns() {
-  const m = E.snapshot().match; if (!m || view !== 'match') return;
+  const m = snap().match; if (!m || view !== 'match') return;
   const run = $('#arRun'), sub = $('#arSubmit'); if (!run || !sub) return;
   run.disabled = busy;
   const wait = m.lastSubmitAt ? Math.ceil((E.SUBMIT_GAP_MS - (Date.now() - m.lastSubmitAt)) / 1000) : 0;
@@ -427,7 +447,7 @@ function setBtns() {
 function tickUI() {
   if (!root) return;
   const md = $('#arMode'); if (md) md.hidden = Q.hasLive(); // đang trong trận đoán output: không đổi chế độ
-  const m = E.snapshot().match;
+  const m = snap().match;
   if (view === 'waiting' && m) { const el = $('#arWaitT'); if (el) { const t = Math.floor((Date.now() - m.createdAt) / 1000); el.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; } }
   if (view === 'match' && m?.deadlineAt) {
     const left = (m.deadlineAt - Date.now()) / 1000;

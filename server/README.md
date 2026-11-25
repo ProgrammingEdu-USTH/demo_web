@@ -50,6 +50,20 @@ hiển thị bằng tên người chơi trong Góc học (`PUT /api/user`). Acce
 Đấu thử một mình: mở arena ở hai trình duyệt khác nhau (hoặc một cửa sổ ẩn danh), một bên “Tạo phòng riêng”,
 bên kia nhập mã vào “Vào phòng”. “Tìm trận ngay” ghép với người đang chờ trong hàng công khai.
 
+## Đấu với máy (offline)
+
+Cả hai chế độ đều có nút **Đấu với máy · offline**, chạy hoàn toàn trên trình duyệt, không cần backend
+(không tính Elo/XP): đấu code dùng `web/src/arena/offline.js` — bot nộp bài theo lịch, bài của bạn được chấm
+bằng Pyodide ngay trên máy; Đoán output dùng bot trong `web/src/arena/quiz.js`. Khi không kết nối được máy chủ,
+sảnh hiện banner **Offline**, khoá các nút online và tự thử lại mỗi 10 giây.
+
+Kho đề offline `web/src/arena/offline-problems.json` được xuất từ `src/arena/problems/*.ts` (gồm cả test ẩn,
+chấp nhận được vì trận với máy không tính điểm). Sửa đề xong thì xuất lại:
+
+```powershell
+npm --prefix server run build; npm --prefix server run export:offline
+```
+
 ## Cấu hình (`server/.env`)
 
 Sao từ `.env.example`. Bắt buộc: `DATABASE_URL` (Neon, endpoint `-pooler`), `DIRECT_URL` (không `-pooler`,

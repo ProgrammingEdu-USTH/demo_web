@@ -106,8 +106,8 @@ async function pollOnline() {
 async function loadProfile() {
   try {
     const [me, lb] = await Promise.all([quizApi.me(), quizApi.leaderboard()]);
-    S.me = me; const rows = lb.entries.slice(); if (lb.me && !rows.some((e) => e.is_me)) rows.push(lb.me); S.board = rows; S.loaded = true;
-  } catch (e) { S.loaded = 'err'; S.err = describe(e); }
+    S.me = me; const rows = lb.entries.slice(); if (lb.me && !rows.some((e) => e.is_me)) rows.push(lb.me); S.board = rows; S.loaded = true; S.offline = false;
+  } catch (e) { S.loaded = 'err'; S.err = describe(e); S.offline = e?.status === 0; }
   render();
 }
 async function resumeOnline() {
@@ -213,9 +213,10 @@ function lobbyHTML() {
       <h2>Đoán output</h2>
       <p>1 chọi 1 · 5 câu · 15 giây mỗi câu. Đọc đoạn code, chọn đúng thứ nó in ra. Trả lời đúng được 100 điểm, nhanh hơn được cộng thêm.</p>
       <div class="ar-cta">
-        <button class="btn ar-go" id="qzOnline" ${busy ? 'disabled' : ''}>Đấu online</button>
-        <button class="btn ghost" id="qzBot" ${busy ? 'disabled' : ''}>Đấu với máy</button>
+        <button class="btn ar-go" id="qzOnline" ${busy || S.offline ? 'disabled' : ''} ${S.offline ? 'title="Cần máy chủ Arena — đang offline"' : ''}>Đấu online</button>
+        <button class="btn ar-bot" id="qzBot" ${busy ? 'disabled' : ''}>Đấu với máy · offline</button>
       </div>
+      ${S.offline ? '<p class="qz-note">Offline: chưa kết nối được máy chủ nên đấu online tạm khoá. Đấu với máy vẫn chơi được ngay.</p>' : ''}
       ${S.note ? `<p class="qz-note">${esc(S.note)}</p>` : ''}
       <ul class="ar-rules">
         <li><b>Online</b>: gặp người thật đang chờ, tính Elo và XP. Câu hỏi và đáp án do máy chủ giữ.</li>
@@ -288,7 +289,7 @@ function resultHTML(m) {
 }
 
 function keyOf(m) {
-  if (!m) return `lobby|${busy}|${S.loaded}|${S.me.rating}|${S.board.length}|${S.note}`;
+  if (!m) return `lobby|${busy}|${S.loaded}|${S.offline}|${S.me.rating}|${S.board.length}|${S.note}`;
   if (m.status === 'waiting') return `wait|${m.id}`;
   if (m.status === 'finished') return `res|${m.kind}|${m.id ?? ''}|${S.me.rating}`;
   const q = m.current != null ? m.questions[m.current] : null;
@@ -351,7 +352,13 @@ export function mount(el, options = {}) {
   void loadProfile(); if (!S.online) void resumeOnline();
   render();
   tick = setInterval(() => { if (!root?.isConnected) return unmount(); if (S.kind === 'bot') render(); else frame(); }, 200);
-  pollT = setInterval(() => { if (root?.isConnected) void pollOnline(); }, document.hidden ? 2000 : 1000);
+  let retryAt = Date.now() + 10_000;
+  pollT = setInterval(() => {
+    if (!root?.isConnected) return;
+    void pollOnline();
+    // offline: cứ 10 giây thử lại; máy chủ chạy trở lại thì mở khoá "Đấu online"
+    if (S.offline && !match() && Date.now() >= retryAt) { retryAt = Date.now() + 10_000; void loadProfile(); }
+  }, document.hidden ? 2000 : 1000);
   addEventListener('keydown', onKey);
 }
 export function unmount() {

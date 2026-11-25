@@ -225,3 +225,12 @@
 .qz .ar-result{max-width:640px;margin:2vh auto 0;text-align:center}
 .qz .ar-result .ar-cta{justify-content:center}
 @media (max-width:640px){.qz-opts{grid-template-columns:1fr}.qz-vs{grid-template-columns:1fr auto 1fr;padding:10px}.qz-vs .p .av{display:none}.ar-mode button{padding:0 12px;font-size:12.5px}}
+
+/* ---------- đấu với máy (offline) ---------- */
+.btn.ar-bot{height:44px;padding:0 18px;font-size:14.5px;background:rgba(154,216,255,.16);color:var(--ink);border:1.5px solid rgba(154,216,255,.55)}
+.btn.ar-bot:hover{background:rgba(154,216,255,.26)}
+.ar-probs li{grid-template-columns:auto minmax(0,1fr) auto}
+.ar-pbtn{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ar-pbtn .btn{height:32px;padding:0 12px;font-size:12.5px}
+.ar-pbtn [data-bot]{border-color:rgba(154,216,255,.45)}
+@media (max-width:560px){.ar-pbtn{flex-direction:column}}
