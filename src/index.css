@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    background-color: #f7f5ee;
+    color: #1e293b;
+    font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  }
+}
+
+.bg-blueprint-dots {
+  background-color: #f7f5ee;
+  background-image: radial-gradient(#e5e0d5 1.5px, transparent 1.5px);
+  background-size: 18px 18px;
+}
+
+/* Subtle blueprint scrollbar styling */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f7f5ee;
+  border-left: 1px solid #e5e0d5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border: 1.5px solid #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
